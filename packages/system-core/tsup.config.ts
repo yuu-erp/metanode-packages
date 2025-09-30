@@ -3,8 +3,15 @@ import { defineConfig } from "tsup";
 export default defineConfig({
   entry: ["src/index.ts"],
   format: ["esm", "cjs"],
-  dts: true, // sinh file .d.ts
-  sourcemap: true, // debug dễ hơn
-  clean: true, // xoá dist trước khi build
-  minify: false, // lib thường không minify
+  dts: true,
+  minify: true,
+  bundle: true, // ✅ bundle all deps
+  platform: "browser", // ✅ browser friendly
+  splitting: false,
+  sourcemap: true,
+  clean: true,
+  outDir: "dist",
+  outExtension({ format }) {
+    return format === "esm" ? { js: ".mjs" } : { js: ".cjs" };
+  },
 });

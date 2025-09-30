@@ -1,22 +1,24 @@
 {
-  "name": "@metanode/system-core",
+  "name": "@metanodejs/system-core",
   "version": "0.1.0",
   "private": false,
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     }
   },
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup src/index.ts --format esm,cjs --dts --minify",
     "dev": "tsup --watch",
     "lint": "eslint src --ext .ts,.tsx",
     "test": "vitest"
@@ -27,6 +29,15 @@
   "license": "MIT",
   "description": "",
   "dependencies": {
+    "@metanodejs/exceptions": "^0.0.1",
+    "nanoid": "^5.1.6"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "rollup": "^4.52.3",
+    "rollup-plugin-terser": "^7.0.2",
     "tsup": "^8.5.0"
   }
 }

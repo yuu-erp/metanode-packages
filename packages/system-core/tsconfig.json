@@ -1,13 +1,18 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist", // nơi xuất build tạm thời khi dùng tsc
-    "rootDir": "src", // để giữ cấu trúc chuẩn
-    "composite": true, // để hỗ trợ project references
-    "declaration": true, // xuất file .d.ts (nếu dùng tsc)
-    "declarationMap": true, // map ngược cho debug type
-    "noEmit": false // cho phép tsc emit khi build type
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["src/*"]
+    }
   },
-  "include": ["src"],
+  "include": ["src/**/*", "rollup.config.cjs"],
   "exclude": ["dist", "node_modules"]
 }
