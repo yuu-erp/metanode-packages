@@ -1,0 +1,11 @@
+---
+description: Quy tắc chung cho toàn bộ dự án
+alwaysApply: true
+---
+
+# QUY TẮC CHUNG
+- **Luôn phản hồi bằng tiếng Việt**. Đây là quy tắc quan trọng nhất. Mọi câu trả lời, giải thích và đoạn mã được tạo ra phải sử dụng tiếng Việt (có dấu).
+- **Tất cả mã nguồn trong dự án phải được viết bằng TypeScript** (bao gồm code của các microservice, script build/deploy).
+- **Kiến trúc** phải theo mô hình microservices: mỗi service độc lập, có Dockerfile, tests, README riêng, có thể triển khai độc lập.
+- **Code style** tuân theo eslint + prettier config chung của dự án.
+- **Bảo mật & cấu hình**: Mọi biến môi trường phải được định nghĩa trong `.env` chuẩn, không hard-code secrets trong mã nguồn.

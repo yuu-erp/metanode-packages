@@ -1,0 +1,12 @@
+node_modules
+build
+dist
+coverage
+.turbo
+.husky
+k8s
+**/*.lock
+**/*.log
+**/.env*
+**/generated/**
+**/prisma/generated/**

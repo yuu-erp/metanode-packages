@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/
+coverage/
+.turbo/
+.husky/
+*.js
+*.cjs
+**/*.d.ts
+**/generated/**
+**/prisma/generated/**
