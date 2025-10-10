@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ES Module Demo</title>
+</head>
+
+<body>
+    <script type="module">
+        import { SystemMessage, EventBusTransport } from './index.mjs';
+
+        try {
+            const eventBusA = new EventBusTransport("test-bus", true);
+            const eventBusB = new EventBusTransport("test-bus", true);
+
+            // Node A
+            const systemA = new SystemMessage(eventBusA, { isDebug: true });
+            // Node B
+            const systemB = new SystemMessage(eventBusB, { isDebug: true });
+            systemB.on((msg) => {
+                console.log("✅ [Node B] Received message:", msg);
+            });
+
+            // Tạo message cực lớn
+            const bigString = "A".repeat(1024 * 200); // 200KB
+            systemA.send({
+                messageId: "uuid-123",
+                command: "uploadLargePayload",
+                value: { content: bigString },
+            });
+        } catch (err) {
+            console.log(err.toJSON());
+        }
+    </script>
+</body>
+
+</html>

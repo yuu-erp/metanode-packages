@@ -1,15 +1,15 @@
-import { EventEmitter } from "events";
 import { ChunkReceiver } from "../chunk/chunk-receiver";
 import { ResponseMessage, TransportMessage } from "../types/message";
+import { SimpleEventBus } from "../utils/event-bus";
 import { Logger } from "../utils/logger";
 import { ITransportInterface } from "./transport.interface";
 
 /**
  * Mô phỏng một môi trường message transport (giống postMessage)
- * nhưng dùng EventEmitter nội bộ.
+ * nhưng dùng EventBus nội bộ.
  */
 export class EventBusTransport implements ITransportInterface {
-  private static bus = new EventEmitter();
+  private static bus = new SimpleEventBus();
   private readonly chunkReceiver: ChunkReceiver;
   private readonly logger: Logger;
 
@@ -21,17 +21,11 @@ export class EventBusTransport implements ITransportInterface {
     this.chunkReceiver = new ChunkReceiver(this.logger);
   }
 
-  /**
-   * Gửi message đi qua event bus.
-   */
   send(request: TransportMessage): void {
     const payload = JSON.stringify(request);
     EventBusTransport.bus.emit(this.channel, payload);
   }
 
-  /**
-   * Lắng nghe event từ event bus.
-   */
   onMessage<T>(callback: (msg: ResponseMessage<T>) => void): void {
     EventBusTransport.bus.on(this.channel, (rawData: string) => {
       try {
