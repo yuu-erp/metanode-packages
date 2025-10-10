@@ -12,13 +12,13 @@
         import { SystemMessage, EventBusTransport } from './index.mjs';
 
         try {
-            const eventBusA = new EventBusTransport("test-bus", true);
-            const eventBusB = new EventBusTransport("test-bus", true);
+            const eventBusA = new EventBusTransport("test-bus", false);
+            const eventBusB = new EventBusTransport("test-bus", false);
 
             // Node A
-            const systemA = new SystemMessage(eventBusA, { isDebug: true });
+            const systemA = new SystemMessage(eventBusA, { isDebug: false });
             // Node B
-            const systemB = new SystemMessage(eventBusB, { isDebug: true });
+            const systemB = new SystemMessage(eventBusB, { isDebug: false });
             systemB.on((msg) => {
                 console.log("✅ [Node B] Received message:", msg);
             });
@@ -28,7 +28,8 @@
             systemA.send({
                 messageId: "uuid-123",
                 command: "uploadLargePayload",
-                value: { content: bigString },
+                value: { content: 'bigString' },
+                windowId: "123"
             });
         } catch (err) {
             console.log(err.toJSON());

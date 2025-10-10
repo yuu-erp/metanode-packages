@@ -1,24 +1,25 @@
+import { InternalServerErrorException } from "@metanodejs/exceptions";
 import { ChunkReceiver } from "../chunk/chunk-receiver";
+import { Webkit } from "../types/env";
 import { ResponseMessage, TransportMessage } from "../types/message";
 import { Logger } from "../utils/logger";
 import { BaseTransport } from "./base.transport";
 
-export class PostMessageTransport implements BaseTransport {
+export class NativeBridgeTransport implements BaseTransport {
   private readonly chunkReceiver: ChunkReceiver;
   private readonly logger: Logger;
-  private readonly targetWindow: Window;
-  private readonly origin: string;
+  private readonly webkit: Webkit | undefined;
 
-  constructor(targetWindow: Window, origin: string = "*", isDebug: boolean = false) {
-    this.logger = new Logger({ enabled: isDebug, prefix: "PostMessageTransport" });
+  constructor(isDebug: boolean = false) {
+    this.logger = new Logger({ enabled: isDebug, prefix: "NativeBridgeTransport" });
     this.chunkReceiver = new ChunkReceiver(this.logger);
-    this.targetWindow = targetWindow;
-    this.origin = origin;
+    this.webkit = this.getWebkit();
   }
 
   send(request: TransportMessage): void {
-    const payload = JSON.stringify(request);
-    this.targetWindow.postMessage(payload, this.origin);
+    if (!this.webkit)
+      throw new InternalServerErrorException("Webkit is not available or not properly initialized");
+    this.webkit.messageHandlers.callbackHandler.postMessage(JSON.stringify(request));
   }
 
   onMessage(callback: (event: ResponseMessage) => void): void {
@@ -36,5 +37,18 @@ export class PostMessageTransport implements BaseTransport {
         this.logger.error("❌ Error parsing event bus message", error);
       }
     });
+  }
+
+  private getWebkit(): Webkit | undefined {
+    if (
+      typeof window === "undefined" ||
+      typeof window.webkit === "undefined" ||
+      typeof window.webkit.messageHandlers === "function" ||
+      typeof window.webkit.messageHandlers.callbackHandler === "function" ||
+      typeof window.webkit.messageHandlers.callbackHandler.postMessage !== "function"
+    ) {
+      return undefined;
+    }
+    return window.webkit;
   }
 }

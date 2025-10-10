@@ -27,12 +27,13 @@ export type Message = {
 };
 export type RequestMessage<T = unknown> = Message & {
   value?: T;
+  /** Cho phép mở rộng thêm key-value tùy ý */
+  [key: string]: any;
 };
 export type ResponseMessage<T = unknown> = Message & {
   data: T;
   success: boolean;
 };
-export type MessageEnvelope<T = unknown> = RequestMessage<T> | ResponseMessage<T>;
 export interface NormalMessage {
   type: "normal";
   data: string;
@@ -45,15 +46,3 @@ export interface LargeMessage {
   command: string;
 }
 export type TransportMessage = NormalMessage | LargeMessage;
-/**
- * Mỗi chunk có type = "large"
- * và chứa metadata để ghép lại ở phía receiver.
- */
-export interface ChunkEnvelope {
-  type: "large";
-  messageId: string;
-  index: number;
-  totalChunks: number;
-  command: string;
-  chunk: string; // stringified partial data
-}

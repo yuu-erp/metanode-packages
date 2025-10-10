@@ -1,6 +1,6 @@
 import type { ResponseMessage, TransportMessage } from "../types/message";
 
-export interface ITransportInterface {
+export interface BaseTransport {
   send(request: TransportMessage): void;
-  onMessage<T = unknown>(callback: (event: ResponseMessage<T>) => void): void;
+  onMessage(callback: (event: ResponseMessage) => void): void;
 }

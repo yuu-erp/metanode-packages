@@ -1,5 +1,5 @@
 import { ChunkSender } from "../chunk";
-import { ITransportInterface } from "../transport";
+import { BaseTransport } from "../transport";
 import { RequestMessage } from "../types/message";
 import { Logger } from "../utils/logger";
 
@@ -16,11 +16,11 @@ const defaultOptions: Required<SystemMessageOptions> = {
 };
 
 export class SystemMessage {
-  private readonly transport: ITransportInterface;
+  private readonly transport: BaseTransport;
   private readonly logger: Logger;
   private readonly options: Required<SystemMessageOptions>;
   private readonly chunkSender: ChunkSender;
-  constructor(transport: ITransportInterface, options?: SystemMessageOptions) {
+  constructor(transport: BaseTransport, options?: SystemMessageOptions) {
     this.transport = transport;
     // merge default với user options
     this.options = { ...defaultOptions, ...options };
