@@ -1,0 +1,42 @@
+{
+  "name": "@metanodejs/system-core-v2",
+  "version": "0.0.4",
+  "private": false,
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --minify",
+    "dev": "nodemon",
+    "lint": "eslint src --ext .ts,.tsx",
+    "test": "vitest"
+  },
+  "sideEffects": false,
+  "keywords": [],
+  "author": "yuu.erp@gmail.com",
+  "license": "MIT",
+  "description": "",
+  "devDependencies": {
+    "@metanodejs/system-message": "workspace:*",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.5.0",
+    "typescript": "5.9.2"
+  },
+  "dependencies": {
+    "@metanodejs/exceptions": "^0.0.1",
+    "nanoid": "^5.1.6"
+  }
+}
