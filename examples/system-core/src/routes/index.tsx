@@ -12,15 +12,11 @@ function App() {
   const fetchAllWallet = async () => {
     if (!systemCoreBase.current) return;
 
-    const requests = Array.from({ length: 1 }, (_) =>
-      systemCoreBase.current!.send({
-        command: "getAllWallets",
-      }),
-    );
-
     try {
-      const results = await Promise.all(requests);
-      console.log("results:", results);
+      const results = await systemCoreBase.current!.send<{ address: string }[]>({
+        command: "getAllWallets",
+      });
+      console.log("results:", results[0].address);
     } catch (error) {
       console.error(error);
     }

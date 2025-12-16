@@ -34,6 +34,7 @@ export type ResponseMessage<T = unknown> = Message & {
   data: T;
   success: boolean;
   message?: string;
+  isSocket?: boolean;
 };
 export interface NormalMessage {
   type: "normal";
@@ -45,5 +46,6 @@ export interface LargeMessage {
   index: number;
   totalChunks: number;
   command: string;
+  messageId: string;
 }
 export type TransportMessage = NormalMessage | LargeMessage;

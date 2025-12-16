@@ -37,6 +37,7 @@ export class NativeBridgeTransport implements BaseTransport {
             success: parse.data.success,
             data: parse.data.data,
             message: parse.data.message,
+            isSocket: parse.data.isSocket,
             messageId: parse.messageId,
             command: parse.command,
           };

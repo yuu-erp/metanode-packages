@@ -37,9 +37,7 @@ export class SystemCoreBase {
     this.listenMessage();
   }
 
-  public async send<T = unknown>(
-    payload: Omit<RequestMessage, "messageId">,
-  ): Promise<ResponseMessage<T>> {
+  public async send<T = unknown>(payload: Omit<RequestMessage, "messageId">): Promise<T> {
     const messageId = generateMesageId();
     const command = payload.command;
     if (!command) {
@@ -54,7 +52,7 @@ export class SystemCoreBase {
       },
     } as RequestMessage; // type assertion ở đây
     // Tạo promise và lưu vào map để chờ response
-    const promise = new Promise<ResponseMessage<T>>((resolve, reject) => {
+    const promise = new Promise<T>((resolve, reject) => {
       const key = `${command}-${messageId}`;
       this.pendingRequests.set(key, { resolve, reject });
       // Optional: timeout để tránh leak memory nếu không có response
@@ -105,7 +103,7 @@ export class SystemCoreBase {
   }
 
   private initTransport(): BaseTransport {
-    const debug = !!this.config.isDebug;
+    const debug = !!this.config.debug;
 
     if (isMetanodeWebView()) {
       return new NativeBridgeTransport(debug);

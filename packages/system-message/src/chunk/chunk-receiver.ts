@@ -48,7 +48,7 @@ export class ChunkReceiver {
     }
 
     const { command, chunk, index, totalChunks } = message as LargeMessage;
-    const messageId = `${command}`; // hoặc thêm traceId vào nếu cần phân biệt nhiều message
+    const messageId = `${command}-${message.messageId}`; // hoặc thêm traceId vào nếu cần phân biệt nhiều message
 
     let buffer = this.chunkBuffer.get(messageId);
     if (!buffer) {
