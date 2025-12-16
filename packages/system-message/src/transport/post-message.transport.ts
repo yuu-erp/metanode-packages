@@ -4,6 +4,7 @@ import { Logger } from "../utils/logger";
 import { BaseTransport } from "./base.transport";
 
 export class PostMessageTransport implements BaseTransport {
+  readonly source = "postmessage";
   private readonly chunkReceiver: ChunkReceiver;
   private readonly logger: Logger;
   private readonly targetWindow: Window;

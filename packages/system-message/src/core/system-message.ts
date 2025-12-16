@@ -1,6 +1,6 @@
 import { ChunkSender } from "../chunk";
 import { BaseTransport } from "../transport";
-import { RequestMessage } from "../types/message";
+import { RequestMessage, ResponseMessage } from "../types/message";
 import { Logger } from "../utils/logger";
 
 export interface SystemMessageOptions {
@@ -53,7 +53,7 @@ export class SystemMessage {
     }
   }
 
-  public on(callback: (event: RequestMessage) => void): void {
+  public on(callback: (event: ResponseMessage) => void): void {
     this.transport.onMessage(callback);
   }
 

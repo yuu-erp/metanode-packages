@@ -33,6 +33,7 @@ export type RequestMessage<T = unknown> = Message & {
 export type ResponseMessage<T = unknown> = Message & {
   data: T;
   success: boolean;
+  message?: string;
 };
 export interface NormalMessage {
   type: "normal";

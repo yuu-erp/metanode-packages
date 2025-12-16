@@ -11,6 +11,8 @@ const CHANNELS = {
 } as const;
 
 export class ElectronAPITransport implements BaseTransport {
+  readonly source = "electron";
+
   private readonly chunkReceiver: ChunkReceiver;
   private readonly logger: Logger;
   private readonly electronAPI: ElectronAPI | undefined;

@@ -6,6 +6,8 @@ import { Logger } from "../utils/logger";
 import { BaseTransport } from "./base.transport";
 
 export class NativeBridgeTransport implements BaseTransport {
+  readonly source = "native"; // ← bắt buộc có
+
   private readonly chunkReceiver: ChunkReceiver;
   private readonly logger: Logger;
   private readonly webkit: Webkit | undefined;
@@ -27,11 +29,18 @@ export class NativeBridgeTransport implements BaseTransport {
       try {
         this.logger.debug("📥 Received message: ", event.data);
         const rawData = event.data;
-        const parsed = JSON.parse(rawData) as TransportMessage;
-        const assembled = this.chunkReceiver.receiveChunk(parsed);
+        const assembled = this.chunkReceiver.receiveChunk(rawData);
         if (assembled) {
-          this.logger.debug("📥 Received and assembled message", assembled.data);
-          callback(JSON.parse(assembled.data));
+          this.logger.debug("📥 Received and assembled message", assembled);
+          const parse = JSON.parse(assembled.data);
+          const resultCallBack: ResponseMessage = {
+            success: parse.data.success,
+            data: parse.data.data,
+            message: parse.data.message,
+            messageId: parse.messageId,
+            command: parse.command,
+          };
+          callback(resultCallBack);
         }
       } catch (error) {
         this.logger.error("❌ Error parsing event bus message", error);
@@ -40,15 +49,19 @@ export class NativeBridgeTransport implements BaseTransport {
   }
 
   private getWebkit(): Webkit | undefined {
+    if (typeof window === "undefined") return undefined;
+
+    const w = window as any;
+
     if (
-      typeof window === "undefined" ||
-      typeof window.webkit === "undefined" ||
-      typeof window.webkit.messageHandlers === "function" ||
-      typeof window.webkit.messageHandlers.callbackHandler === "function" ||
-      typeof window.webkit.messageHandlers.callbackHandler.postMessage !== "function"
+      typeof w.webkit !== "object" ||
+      typeof w.webkit.messageHandlers !== "object" ||
+      typeof w.webkit.messageHandlers.callbackHandler !== "object" ||
+      typeof w.webkit.messageHandlers.callbackHandler.postMessage !== "function"
     ) {
       return undefined;
     }
-    return window.webkit;
+
+    return w.webkit as Webkit;
   }
 }

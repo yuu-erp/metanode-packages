@@ -44,7 +44,7 @@ export class ChunkReceiver {
   public receiveChunk(message: TransportMessage): NormalMessage | null {
     if (!message.type || message.type !== "large") {
       // Không cần ghép, trả lại luôn
-      return message;
+      return { type: "normal", data: JSON.stringify(message) };
     }
 
     const { command, chunk, index, totalChunks } = message as LargeMessage;

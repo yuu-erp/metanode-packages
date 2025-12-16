@@ -29,6 +29,7 @@
   "license": "MIT",
   "description": "",
   "dependencies": {
+    "@metanodejs/system-message": "workspace:*",
     "@metanodejs/exceptions": "^0.0.1",
     "nanoid": "^5.1.6"
   },

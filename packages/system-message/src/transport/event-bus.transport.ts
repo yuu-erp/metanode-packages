@@ -9,6 +9,8 @@ import { BaseTransport } from "./base.transport";
  * nhưng dùng EventBus nội bộ.
  */
 export class EventBusTransport implements BaseTransport {
+  readonly source = "eventbus"; // ← bắt buộc có
+
   private static bus = new SimpleEventBus();
   private readonly chunkReceiver: ChunkReceiver;
   private readonly logger: Logger;
