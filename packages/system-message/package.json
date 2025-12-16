@@ -1,6 +1,6 @@
 {
   "name": "@metanodejs/system-message",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "private": false,
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
