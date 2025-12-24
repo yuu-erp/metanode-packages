@@ -1,2 +1,2 @@
 export type { JsonFragment, JsonFragmentType } from "./fragments.js";
-export type { InterfaceAbi } from "./interface";
+export type { InterfaceAbi } from "./interface.js";

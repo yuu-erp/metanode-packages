@@ -1,6 +1,6 @@
 {
-  "name": "@metanodejs/system-contract",
-  "version": "0.0.0",
+  "name": "@metanodejs/utils",
+  "version": "0.1.0",
   "private": false,
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
@@ -29,8 +29,6 @@
   "license": "MIT",
   "description": "",
   "devDependencies": {
-    "@metanodejs/system-core": "workspace:*",
-    "@types/ws": "^8.18.1",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
@@ -38,11 +36,6 @@
   },
   "dependencies": {
     "@metanodejs/exceptions": "^0.0.1",
-    "axios": "^1.13.2",
-    "ethers": "^6.16.0",
-    "nanoid": "^5.1.6",
-    "prom-client": "^15.1.3",
-    "rate-limiter-flexible": "^9.0.1",
-    "ws": "^8.18.3"
+    "nanoid": "^5.1.6"
   }
 }
