@@ -32,7 +32,7 @@ export class HttpJsonRpcTransport implements Transport {
     }
   }
 
-  subscribe<D = unknown>(event: string, callback: (data: D) => void): () => void {
+  subscribe<D = unknown>(_event: string, _callback: (data: D) => void): () => void {
     throw new Error("Subscriptions not supported over HTTP");
   }
 

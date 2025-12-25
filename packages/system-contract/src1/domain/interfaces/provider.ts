@@ -7,7 +7,7 @@ export interface Provider<ChainType = unknown> {
   /**
    * Initialize provider with chain config and optional middlewares.
    * @param config Chain-specific configuration.
-   * @param middlewares Array of middlewares to apply.
+   * @param middleâwares Array of middlewares to apply.
    */
   initialize(config: ChainConfig, middlewares?: Middleware[]): void;
 

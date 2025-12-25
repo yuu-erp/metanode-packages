@@ -22,7 +22,7 @@ export class RateLimitMiddleware implements Middleware {
     return res;
   }
 
-  handleError(error: Error): void {
+  handleError(): void {
     // Optional: log error
   }
 }

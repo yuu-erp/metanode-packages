@@ -1,0 +1,29 @@
+/**
+ *  An interface for objects which have an address, and can
+ *  resolve it asyncronously.
+ *
+ *  This allows objects such as [[Signer]] or [[Contract]] to
+ *  be used most places an address can be, for example getting
+ *  the [balance](Provider-getBalance).
+ */
+export interface Addressable {
+  getAddress(): Promise<string>;
+}
+/**
+ *  Anything that can be used to return or resolve an address.
+ */
+export type AddressLike = string | Promise<string> | Addressable;
+
+/**
+ *  An interface for any object which can resolve an ENS name.
+ */
+export interface NameResolver {
+  /**
+   *  Resolve to the address for the ENS %%name%%.
+   *
+   *  Resolves to ``null`` if the name is unconfigued. Use
+   *  [[resolveAddress]] (passing this object as %%resolver%%) to
+   *  throw for names that are unconfigured.
+   */
+  resolveName(name: string): Promise<null | string>;
+}
