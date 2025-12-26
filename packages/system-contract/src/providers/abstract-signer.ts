@@ -1,29 +1,105 @@
 import assert from "assert";
-import type { BlockTag, Provider } from ".";
+import type {
+  AccountState,
+  Address,
+  BlockTag,
+  Provider,
+  TransactionRequest,
+  TransactionResponse,
+} from ".";
 import { defineProperties } from "../utils";
-import { Signer } from "./signer";
+import { Signer, SmartAccountSigner } from "./signer";
 
 export abstract class AbstractSigner<P extends null | Provider = null | Provider>
-  implements Signer
+  implements SmartAccountSigner
 {
   readonly provider!: P;
+
   constructor(provider?: P) {
-    defineProperties<AbstractSigner>(this, { provider: provider || null });
+    defineProperties<AbstractSigner>(this, {
+      provider: provider ?? null,
+    });
+  }
+
+  /* ------------------------------------------------------------------
+   * Identity
+   * ------------------------------------------------------------------ */
+
+  abstract getAddress(): Promise<Address>;
+
+  abstract connect(provider: null | Provider): Signer;
+
+  /* ------------------------------------------------------------------
+   * Account state
+   * ------------------------------------------------------------------ */
+
+  async getAccountState(): Promise<AccountState> {
+    assert(this.provider, "Signer has no provider");
+    const address = await this.getAddress();
+    return this.provider.getAccountState(address);
   }
 
   /**
-   *  Resolves to the Signer address.
+   * Ensure the account is initialized on-chain.
+   * Default implementation is no-op (EOA-like).
+   * Smart account signers SHOULD override this.
    */
-  abstract getAddress(): Promise<string>;
+  async ensureInitialized(): Promise<void> {
+    // no-op by default
+  }
+
+  /* ------------------------------------------------------------------
+   * Transaction lifecycle
+   * ------------------------------------------------------------------ */
 
   /**
-   *  Returns the signer connected to %%provider%%.
-   *
-   *  This may throw, for example, a Signer connected over a Socket or
-   *  to a specific instance of a node may not be transferrable.
+   * Sign a populated transaction and return the raw signed payload.
+   * Concrete signers MUST implement this.
    */
-  abstract connect(provider: null | Provider): Signer;
+  abstract signTransaction(tx: TransactionRequest): Promise<string>;
+
+  /**
+   * Send a transaction to the network.
+   *
+   * This method enforces the standard signer flow:
+   *  1. Ensure the account is initialized
+   *  2. Populate missing transaction fields
+   *  3. Sign the transaction
+   *  4. Send via provider
+   */
+  async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
+    assert(this.provider, "Signer has no provider");
+
+    await this.ensureInitialized();
+
+    const populatedTx = await this.populateTransaction(tx);
+    const signedTx = await this.signTransaction(populatedTx);
+
+    return this.provider.sendTransaction(signedTx);
+  }
+
+  /* ------------------------------------------------------------------
+   * Helpers
+   * ------------------------------------------------------------------ */
+
   async getNonce(blockTag?: BlockTag): Promise<number> {
-    throw new Error("Method not implements!");
+    assert(this.provider, "Signer has no provider");
+    const address = await this.getAddress();
+    return this.provider.getTransactionCount(address, blockTag);
+  }
+
+  protected async populateTransaction(tx: TransactionRequest): Promise<TransactionRequest> {
+    assert(this.provider, "Signer has no provider");
+
+    const from = tx.from ?? (await this.getAddress());
+    const nonce = tx.nonce ?? (await this.provider.getTransactionCount(from, "pending"));
+    const network = await this.provider.getNetwork();
+
+    return {
+      ...tx,
+      from,
+      nonce,
+      chainId: tx.chainId ?? network.chainId,
+    };
   }
 }

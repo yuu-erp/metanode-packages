@@ -1,5 +1,4 @@
 import { JsonRpcProvider, type Address } from "./providers"; // tuỳ path project
-
 console.log("METANODE CONTRACT – PROVIDER FULL TEST");
 
 const provider = new JsonRpcProvider("https://rpc-proxy-sequoia.iqnb.com:8446/");

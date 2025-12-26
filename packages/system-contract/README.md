@@ -1,5 +1,6 @@
 # @metanodejs/system-contract
 
+```
 src/
 ├── domain/
 │ ├── interfaces/
@@ -35,3 +36,14 @@ src/
 │ └── chains/
 │ ├── evmChainConfig.ts // Extendable for other chains
 └── index.ts // Exports: Provider factory
+```
+
+```ts
+const provider = new JsonRpcProvider("https://rpc.chain.io");
+
+const wallet = new Wallet(PRIVATE_KEY, provider);
+
+const contract = new Contract(addr, abi, wallet);
+
+await contract.transfer(to, amount);
+```

@@ -1,3 +1,3 @@
 export const contractConfig = {
-  blsPublicKey: process.env.CONTRACT_BLS_PUBLICKEY || "",
+  systemBlsRegistry: process.env.SYSTEM_BLS_REGISTRY || "",
 };

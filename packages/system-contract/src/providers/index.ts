@@ -1,18 +1,21 @@
 export type {
-  Address,
-  BlockTag,
-  Network,
   AccountState,
+  Address,
   Block,
+  BlockTag,
+  EventEmitter,
+  Log,
+  LogFilter,
+  Network,
+  Provider,
+  Reader,
   TransactionReceipt,
   TransactionRequest,
   TransactionResponse,
-  Log,
-  LogFilter,
-  Reader,
   Writer,
-  EventEmitter,
-  Provider,
 } from "./provider";
 
 export { JsonRpcProvider } from "./json-rpc-provider";
+
+export { AbstractSigner } from "./abstract-signer";
+export type { Signer, SmartAccountSigner } from "./signer";
