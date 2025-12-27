@@ -123,6 +123,9 @@ importers:
       '@metanodejs/exceptions':
         specifier: ^0.0.1
         version: 0.0.1
+      '@metanodejs/system-core':
+        specifier: ^0.1.2
+        version: 0.1.2
       '@metanodejs/system-message':
         specifier: workspace:*
         version: link:../system-message
@@ -938,6 +941,12 @@ packages:
 
   '@metanodejs/exceptions@0.0.1':
     resolution: {integrity: sha512-M1PJU5EfyiTSRdIlYx9avjK8zokXaHceN2hUVR2vdjunpuWoGQIA5kiTh6lJE1sAAq+2hnOP3qHwrzk9N++p5g==}
+
+  '@metanodejs/system-core@0.1.2':
+    resolution: {integrity: sha512-yOsNQa59w1mp3lr5xiiWJ9c2hPH/yPpkHRpNuEOzngwPuPMgIiTmt0pgw+2fDAQBERTtUDsyxwhPUxyeoA7lag==}
+
+  '@metanodejs/system-message@0.1.0':
+    resolution: {integrity: sha512-Qrf911Af85VPMtjbUQLFqy6eY0MrkOg2av2SGdfHMCrMxJNQc6hRi0ttCYwYCDmD+kaMLCsAKH96ViuHRYMGwg==}
 
   '@noble/curves@1.2.0':
     resolution: {integrity: sha512-oYclrNgRaM9SsBUBVbb8M6DTV7ZHRTKugureoYEncY5c65HOmRzvSiTE3y5CYaPYJA/GVkrhXEoF0M3Ya9PMnw==}
@@ -4020,6 +4029,17 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@metanodejs/exceptions@0.0.1': {}
+
+  '@metanodejs/system-core@0.1.2':
+    dependencies:
+      '@metanodejs/exceptions': 0.0.1
+      '@metanodejs/system-message': 0.1.0
+      nanoid: 5.1.6
+
+  '@metanodejs/system-message@0.1.0':
+    dependencies:
+      '@metanodejs/exceptions': 0.0.1
+      nanoid: 5.1.6
 
   '@noble/curves@1.2.0':
     dependencies:

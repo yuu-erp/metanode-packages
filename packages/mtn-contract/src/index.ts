@@ -1,1 +1,1 @@
-console.log("MTN CONTRACT");
+export { SmartContractManager } from "./smart-contract-manager";
