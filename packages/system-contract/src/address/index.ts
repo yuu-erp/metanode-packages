@@ -11,3 +11,8 @@ import { Address } from "../providers";
 export interface Addressable {
   getAddress(): Promise<Address>;
 }
+
+export function isValidAddress(address: string): boolean {
+  const cleaned = address.startsWith("0x") ? address.slice(2) : address;
+  return /^[a-fA-F0-9]{40}$/.test(cleaned);
+}

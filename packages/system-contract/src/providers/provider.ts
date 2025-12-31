@@ -114,7 +114,7 @@ export interface LogFilter {
  */
 export interface Reader {
   /**
-   * Queries transactions based on a search query.
+   * Queries transac        bb  tions based on a search query.
    * Uses the standard `mtn_searchTransactions` method.
    *
    * @param {string} queryString - Block number, transaction hash, address, or token address.
