@@ -1,93 +1,94 @@
 import { SystemCore, subscribeToAddress } from "@metanodejs/system-core";
 import { IDecodeAbiRepository } from "../decode-abi/types";
-import { EventLogData, IEventLogRepository } from "./types";
+import { EventMap, EventLogData, IEventLogRepository } from "./types";
 
-/**
- * Raw event log từ SystemCore
- */
 interface EventLogPayload {
   topics?: Record<string, string>;
   data?: string;
 }
 
-/**
- * EventLog repository
- */
-export class EventLog implements IEventLogRepository {
+type Listener<T> = (payload: T) => void;
+
+export class EventLog<TEvents extends EventMap> implements IEventLogRepository<TEvents> {
+  private readonly listeners = new Map<keyof TEvents & string, Set<Listener<any>>>();
+
   constructor(private readonly decodeAbi: IDecodeAbiRepository) {}
 
-  /**
-   * Đăng ký lắng nghe event log theo address
-   */
   async registerEvent(from: string, to: string[]): Promise<void> {
-    try {
-      if (!from || !to?.length) {
-        throw new Error("Bạn chưa đăng nhập nên chưa thể lắng nghe!");
-      }
-
-      console.log("REGISTER EVENT LOGS ---- ", to);
-
-      await Promise.all(
-        to.map((toAddress) => subscribeToAddress({ fromAddress: from, toAddress })),
-      );
-    } catch (error) {
-      console.warn(
-        "Lỗi khi bắt đầu lắng nghe event log:",
-        error instanceof Error ? error.message : error,
-      );
+    if (!from || !to?.length) {
+      throw new Error("Bạn chưa đăng nhập nên chưa thể lắng nghe!");
     }
+
+    await Promise.all(to.map((toAddress) => subscribeToAddress({ fromAddress: from, toAddress })));
   }
 
   /**
-   * Lắng nghe sự kiện log và giải mã dữ liệu
+   * Listen all events
    */
-  onEventLog(callback: (data: EventLogData) => void): () => void {
+  onEventLog(
+    callback: <K extends keyof TEvents & string>(data: EventLogData<K, TEvents[K]>) => void,
+  ): () => void {
     const handler = async (raw: unknown) => {
-      try {
-        const events = this.normalizeEvents(raw);
-        if (!events.length) return;
+      const events = this.normalizeEvents(raw);
+      if (!events.length) return;
 
-        for (const event of events) {
-          const topic0 = event.topics?.["0"];
-          const data = event.data ?? "";
+      for (const event of events) {
+        const topic0 = event.topics?.["0"];
+        if (!topic0) continue;
 
-          if (!topic0) {
-            console.warn("Missing topic0, skip event:", event);
-            continue;
-          }
+        try {
+          const decoded = await this.decodeAbi.decodeAbi(topic0, event.data ?? "", event.topics);
 
-          try {
-            const decoded = await this.decodeAbi.decodeAbi(topic0, data, event.topics);
+          const eventName = decoded.event as keyof TEvents & string;
+          const payload = decoded.decodedData as TEvents[typeof eventName];
 
-            callback({
-              type: decoded.event,
-              payload: decoded.decodedData,
-            });
-          } catch (error) {
-            console.warn(
-              "[EVENT LOG] Decode failed",
-              error instanceof Error ? error.message : error,
-            );
-          }
+          // emit global
+          callback({ type: eventName, payload });
+
+          // emit per-event
+          this.emit(eventName, payload);
+        } catch (error) {
+          console.warn("[EVENT LOG] Decode failed", error);
         }
-      } catch (error) {
-        console.error(
-          "Error processing event logs:",
-          error instanceof Error ? error.message : error,
-        );
       }
     };
 
     SystemCore.on("EventLogs", handler);
+    return () => SystemCore.removeEventListener("EventLogs", handler);
+  }
+
+  /**
+   * Listen specific event
+   */
+  on<K extends keyof TEvents & string>(
+    event: K,
+    callback: (payload: TEvents[K]) => void,
+  ): () => void {
+    const set = this.listeners.get(event) ?? new Set<Listener<TEvents[K]>>();
+
+    set.add(callback);
+    this.listeners.set(event, set);
 
     return () => {
-      SystemCore.removeEventListener("EventLogs", handler);
+      set.delete(callback);
+      if (set.size === 0) {
+        this.listeners.delete(event);
+      }
     };
   }
 
   /**
-   * Chuẩn hóa input từ SystemCore thành array EventLogPayload
+   * Emit event internally
    */
+  private emit<K extends keyof TEvents & string>(event: K, payload: TEvents[K]) {
+    const listeners = this.listeners.get(event);
+    if (!listeners) return;
+
+    for (const listener of listeners) {
+      listener(payload);
+    }
+  }
+
   private normalizeEvents(input: unknown): EventLogPayload[] {
     if (Array.isArray(input)) {
       return input as EventLogPayload[];

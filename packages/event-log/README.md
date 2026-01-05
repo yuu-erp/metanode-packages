@@ -1,13 +1,18 @@
 # @metanodejs/event-log 📩
 
-## Giới thiệu
+`@metanodejs/event-log` là package giúp **lắng nghe, decode và emit event logs từ blockchain**
+theo kiến trúc clean và type-safe.
 
-`@metanodejs/event-log` là package giúp **lắng nghe, decode và emit event logs từ blockchain** theo kiến trúc clean:
+### Mục tiêu thiết kế
 
-- Tách biệt **subscribe log**, **decode ABI**, và **business logic**
-- Hỗ trợ **filter theo event name**
-- API đơn giản: chỉ cần callback, không cần options object
+- Tách biệt rõ:
+  - **Subscribe raw logs**
+  - **Decode ABI**
+  - **Business logic**
+- API đơn giản, dễ dùng
+- Không cần options object
 - Dễ mở rộng, dễ test
+- Phù hợp cho dApp, indexer, backend service
 
 ---
 
@@ -22,7 +27,7 @@ EventLog (subscribe raw logs)
    ↓
 DecodeAbi.decodeAbi()
    ↓
-callback({ type, payload })
+emit { type, payload }
 ```
 
 ---
@@ -100,11 +105,32 @@ const unsubscribe = eventLog.onEventLog((event) => {
 
 ---
 
+### on (listen từng event)
+
+Lắng nghe một event cụ thể theo event name.
+
+```ts
+const unsubscribe = eventLog.on("Transfer", (payload) => {
+  console.log("Transfer payload:", payload);
+});
+```
+
+**Params**
+
+| Tên      | Kiểu              | Mô tả                    |
+| -------- | ----------------- | ------------------------ |
+| event    | string            | Tên event (ABI name)     |
+| callback | (payload) => void | Hàm nhận payload decoded |
+
+**Return**
+
+- Hàm `unsubscribe()` để huỷ lắng nghe event đó.
+
 ## EventLogData
 
 ```ts
 export interface EventLogData {
-  type: string; // event name
+  type: string; // event name (ABI name)
   payload: unknown; // decoded data
 }
 ```
@@ -118,6 +144,14 @@ eventLog.onEventLog(({ type, payload }) => {
   if (type === "Transfer") {
     console.log("Transfer event:", payload);
   }
+});
+```
+
+## Ví dụ hoàn chỉnh
+
+```ts
+eventLog.on("Transfer", (payload) => {
+  console.log("Transfer event:", payload);
 });
 ```
 
@@ -145,21 +179,24 @@ Cách này giúp:
 
 ## Best Practices
 
-- Register ABI **một lần duy nhất** khi bootstrap app
+- Register ABI một lần duy nhất
 - Không decode ABI trong UI layer
-- Filter event trong callback để tránh coupling
-- Indexed `string | bytes` không thể decode ngược (EVM limitation)
+- Dùng `on(eventName)` cho business logic
+- `indexed string | bytes` không thể decode ngược (EVM limitation)
+- EventLog chỉ nên làm infrastructure layer
 
 ---
 
-## Mở rộng
+## Mở rộng (Roadmap gợi ý)
 
 Các hướng nâng cấp gợi ý:
 
 - Typed events (`onEvent<'Transfer'>`)
+- `once(eventName)`
+- `waitFor(eventName, predicate)`
 - Filter theo indexed param
 - Batch / buffer event logs
-- Retry / reconnect websocket
+- Auto-generate EventMap từ ABI
 
 ---
 
