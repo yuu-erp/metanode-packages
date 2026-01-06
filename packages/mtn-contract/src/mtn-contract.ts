@@ -1,9 +1,9 @@
-import { getAllWallets, getStatusConnected } from "@metanodejs/system-core";
-import { isCoreWeb, isValidAddress, parseData } from "./utils";
+import { getStatusConnected } from "@metanodejs/system-core";
 import { connectChain } from "./connect-chain";
 import { sendTransactionNative } from "./services/contract-native";
 import { sendTransactionWeb } from "./services/contract-web";
 import { AbiItem, Address, CallFunctionPayload, ContractConfig } from "./types";
+import { isCoreWeb, isValidAddress, parseData } from "./utils";
 
 let hasInitializedChain = false;
 let chainInitPromise: Promise<void> | null = null;
@@ -53,22 +53,8 @@ export class MtnContract {
 
     if (!chainInitPromise) {
       chainInitPromise = (async () => {
-        const allWallet = await getAllWallets();
-        const walletAddress = allWallet.map((w) => w.address).filter(Boolean);
-
-        if (walletAddress.length === 0) {
-          console.warn("No wallets available — skipping chain connection and callback");
-          throw new Error("No wallets available for chain connection");
-        }
-
-        console.log("connect to chain: ", {
-          chain: this.#getChainConfig(),
-          wallets: walletAddress,
-        });
-
         await connectChain({
           chain: this.#getChainConfig(),
-          wallets: walletAddress,
         });
         hasInitializedChain = true;
       })().catch((error) => {
