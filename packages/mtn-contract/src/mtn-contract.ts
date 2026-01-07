@@ -1,4 +1,3 @@
-import { getStatusConnected } from "@metanodejs/system-core";
 import { connectChain } from "./connect-chain";
 import { sendTransactionNative } from "./services/contract-native";
 import { sendTransactionWeb } from "./services/contract-web";
@@ -66,18 +65,18 @@ export class MtnContract {
     await chainInitPromise;
   }
 
-  async #connectChainIfNeeded() {
-    if (isCoreWeb()) return;
+  // async #connectChainIfNeeded() {
+  //   if (isCoreWeb()) return;
 
-    const checkConnect = await getStatusConnected();
-    console.log("checkConnect----", checkConnect);
-    if (checkConnect.status) return;
+  //   const checkConnect = await getStatusConnected();
+  //   console.log("checkConnect----", checkConnect);
+  //   if (checkConnect.status) return;
 
-    hasInitializedChain = false;
-    chainInitPromise = null;
+  //   hasInitializedChain = false;
+  //   chainInitPromise = null;
 
-    await this.#connectChainOnInit();
-  }
+  //   await this.#connectChainOnInit();
+  // }
 
   public async waitForChainInit(): Promise<void> {
     if (isCoreWeb()) return;
@@ -96,54 +95,49 @@ export class MtnContract {
     await this.#connectChainOnInit();
   }
 
-  private async withChainConnection<T>(callback: () => Promise<T>, errorData = {}): Promise<T> {
-    try {
-      if (isCoreWeb()) {
-        return await callback();
-      }
-      await this.waitForChainInit();
-      await this.#connectChainIfNeeded();
-      return await callback();
-    } catch (error) {
-      console.error(`Error in withChainConnection middleware:`, error);
-      console.error("Error data: ", errorData);
-      throw error;
-    }
-  }
+  // private async withChainConnection<T>(callback: () => Promise<T>, errorData = {}): Promise<T> {
+  //   try {
+  //     if (isCoreWeb()) {
+  //       return await callback();
+  //     }
+  //     return await callback();
+  //   } catch (error) {
+  //     console.error(`Error in withChainConnection middleware:`, error);
+  //     console.error("Error data: ", errorData);
+  //     throw error;
+  //   }
+  // }
 
   public async sendTransaction<T = any>(payload: CallFunctionPayload): Promise<T> {
-    const data = this.#formatPayload(payload);
-    return this.withChainConnection(async () => {
-      try {
-        const data = this.#formatPayload(payload);
-        // console.debug(`KHAIHOAN - Send smc send data: ${payload.functionName}`, data)
-        // if (payload.functionName === 'detailedSettings') {
-        //   const inputNative = await nativeGenerateInput(data)
-        //   console.debug(`KHAIHOAN - input smc: ${payload.functionName}`, inputNative)
-        //   await share({ type: 'text', title: `${payload.functionName} - ${inputNative}` })
-        // }
-        let result;
-        if (isCoreWeb()) {
-          result = await sendTransactionWeb(data);
-          console.log("KHAIHOAN - DEBUG - 2025 - result", result);
-        } else {
-          console.warn("window.finSdk not found, fallback to native transaction");
-          result = await sendTransactionNative(data);
-        }
-        this.#lastHash = result?.data?.hash || "";
-        const returnValue = parseData(
-          result?.data?.returnValue?.[""] ??
-            result?.data?.returnValue ??
-            result?.data?.["return-value"] ??
-            result?.data ??
-            result?.returnValue,
-        );
-        return returnValue as T;
-      } catch (error) {
-        console.debug(`Send smc send data - error: ${payload.functionName}`, error);
-        throw error;
+    try {
+      const data = this.#formatPayload(payload);
+      // console.debug(`KHAIHOAN - Send smc send data: ${payload.functionName}`, data)
+      // if (payload.functionName === 'detailedSettings') {
+      //   const inputNative = await nativeGenerateInput(data)
+      //   console.debug(`KHAIHOAN - input smc: ${payload.functionName}`, inputNative)
+      //   await share({ type: 'text', title: `${payload.functionName} - ${inputNative}` })
+      // }
+      let result;
+      if (isCoreWeb()) {
+        result = await sendTransactionWeb(data);
+        console.log("KHAIHOAN - DEBUG - 2025 - result", result);
+      } else {
+        console.warn("window.finSdk not found, fallback to native transaction");
+        result = await sendTransactionNative(data);
       }
-    }, data);
+      this.#lastHash = result?.data?.hash || "";
+      const returnValue = parseData(
+        result?.data?.returnValue?.[""] ??
+          result?.data?.returnValue ??
+          result?.data?.["return-value"] ??
+          result?.data ??
+          result?.returnValue,
+      );
+      return returnValue as T;
+    } catch (error) {
+      console.debug(`Send smc send data - error: ${payload.functionName}`, error);
+      throw error;
+    }
   }
 
   public generateInput(abi: AbiItem[], functionName: string, data: any) {
