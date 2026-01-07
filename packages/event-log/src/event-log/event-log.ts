@@ -43,6 +43,11 @@ export class EventLog<TEvents extends EventMap> implements IEventLogRepository<T
         }),
       ),
     );
+    console.info(
+      `🛰️ [EVENT REGISTER]
+      From: ${from}
+      To  : ${to.join(", ")}`,
+    );
   }
 
   /**
@@ -108,6 +113,7 @@ export class EventLog<TEvents extends EventMap> implements IEventLogRepository<T
    * SystemCore raw event handler
    */
   private readonly handleSystemEvent = async (raw: unknown) => {
+    console.log("LISTEN EVENT NATIVE RAW -----", raw);
     const events = this.normalizeEvents(raw);
     if (!events.length) return;
 

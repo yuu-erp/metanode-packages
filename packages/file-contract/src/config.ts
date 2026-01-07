@@ -1,0 +1,3 @@
+export const appConfig = {
+  file: "0x087cdab97d38a3bfFcDee170739E8C11Af651569",
+};

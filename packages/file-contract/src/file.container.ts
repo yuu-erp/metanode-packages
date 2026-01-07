@@ -1,0 +1,194 @@
+import { DecodeAbi, EventLog, type EventLogData } from "@metanodejs/event-log";
+import { FileContract } from "./contract";
+import { buildMerkleTreePadded, getMerkleProofPadded, verifyMerkleProof } from "./utils/merkle";
+import { appConfig } from "./config";
+
+export interface FileContainerOptions {
+  toAddress?: string;
+  chunkSize?: number;
+}
+
+const eventAbi = [
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: false, internalType: "address", name: "user", type: "address" },
+      { indexed: false, internalType: "bytes32", name: "fileKey", type: "bytes32" },
+    ],
+    name: "FileActivated",
+    type: "event",
+  },
+];
+
+type FileEventMap = {
+  FileActivated: {
+    user: string;
+    fileKey: string;
+  };
+};
+
+export class FileContractContainer {
+  private readonly options: Required<FileContainerOptions>;
+  private readonly _contract: FileContract;
+  private readonly _eventLog: EventLog<FileEventMap>;
+
+  protected static readonly DEFAULT_CHUNK_SIZE = 250 * 1024;
+
+  private readonly peddingRequest = new Map<
+    string,
+    {
+      resolve: (fileKey: string) => void;
+      reject: (error: Error) => void;
+      timeoutId: ReturnType<typeof setTimeout>;
+    }
+  >();
+
+  private registeredToAddress?: string;
+
+  constructor(options?: FileContainerOptions) {
+    this.options = {
+      toAddress: options?.toAddress ?? appConfig.file,
+      chunkSize: options?.chunkSize ?? FileContractContainer.DEFAULT_CHUNK_SIZE,
+    };
+
+    this._contract = new FileContract();
+
+    const decodeAbi = new DecodeAbi();
+    decodeAbi.registerAbi(eventAbi);
+
+    this._eventLog = new EventLog<FileEventMap>(decodeAbi);
+
+    /** 🔥 LISTEN GLOBAL EVENT 1 LẦN */
+    this._eventLog.onEventLog((data) => {
+      if (data.type === "FileActivated") {
+        this.onFileActivated(data);
+      }
+    });
+  }
+
+  async uploadFile(file: File, from: string): Promise<string> {
+    const startTime = performance.now(); // ⏱️ START
+
+    if (!file || file.size === 0) {
+      throw new Error("Invalid or empty file");
+    }
+
+    await this.ensureRegisterEvent(from);
+
+    const buffer = new Uint8Array(await file.arrayBuffer());
+    const chunks: Uint8Array[] = [];
+
+    for (let i = 0; i < buffer.length; i += this.options.chunkSize) {
+      chunks.push(buffer.slice(i, i + this.options.chunkSize));
+    }
+
+    const [leaves, merkleRoot, treeLevels] = await buildMerkleTreePadded(chunks);
+
+    const dataPrice = await this._contract.calculatePrice(
+      from,
+      this.options.toAddress,
+      chunks.length,
+    );
+
+    const expireTime = Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60;
+    const fileExt = file.name.includes(".") ? file.name.split(".").pop()! : "";
+
+    const { fileKey } = await this._contract.pushFileInfo(
+      from,
+      this.options.toAddress,
+      String(dataPrice),
+      {
+        owner: from,
+        merkleRoot,
+        contentLen: buffer.length,
+        totalChunks: chunks.length,
+        expireTime,
+        name: file.name,
+        ext: fileExt,
+        contentDisposition: "inline",
+        contentID: merkleRoot,
+        status: 0,
+      },
+    );
+
+    /** ⏳ WAIT FILE ACTIVATED */
+    const EVENT_BASE_TIMEOUT = 30_000; // 30s
+    const EVENT_PER_CHUNK_TIMEOUT = 20_000; // 20s / chunk
+    const eventTimeoutMs = EVENT_BASE_TIMEOUT + chunks.length * EVENT_PER_CHUNK_TIMEOUT;
+    const waitForActivated = new Promise<string>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        this.peddingRequest.delete(fileKey);
+        reject(new Error(`Timeout waiting FileActivated for ${fileKey}`));
+      }, eventTimeoutMs);
+
+      this.peddingRequest.set(fileKey, { resolve, reject, timeoutId });
+    });
+
+    /** 🚀 UPLOAD CHUNKS */
+    await Promise.all(
+      chunks.map(async (chunk, i) => {
+        const proof = await getMerkleProofPadded(treeLevels, i);
+        const leafHash = leaves[i]!;
+
+        const valid = await verifyMerkleProof(leafHash, proof, merkleRoot, i);
+        if (!valid) throw new Error(`Invalid proof at chunk ${i}`);
+
+        const chunkDataHex =
+          "0x" +
+          Array.from(chunk)
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+
+        await this._contract.uploadChunk(from, this.options.toAddress, {
+          fileKey,
+          chunkData: chunkDataHex,
+          chunkIndex: i,
+          merkleProof: proof,
+        });
+      }),
+    );
+    console.log("Upload success all chunk");
+
+    await waitForActivated;
+    /** ✅ CHỜ EVENT */
+    const endTime = performance.now();
+    const totalTimeMs = endTime - startTime;
+
+    const fileSizeBytes = file.size;
+    const fileSizeMB = fileSizeBytes / (1024 * 1024);
+
+    console.info(
+      `[UPLOAD FILE]
+      FileKey=${fileKey}
+      Size=${fileSizeBytes} bytes (${fileSizeMB.toFixed(2)} MB)
+      TotalTime=${(totalTimeMs / 1000).toFixed(2)}s`,
+    );
+
+    return fileKey;
+  }
+
+  async downloadFile(): Promise<void> {}
+
+  private onFileActivated(data: EventLogData<"FileActivated", FileEventMap["FileActivated"]>) {
+    console.log("onFileActivated", data);
+    const { fileKey } = data.payload;
+
+    const pending = this.peddingRequest.get(fileKey);
+    if (!pending) return;
+
+    clearTimeout(pending.timeoutId);
+    pending.resolve(fileKey);
+    this.peddingRequest.delete(fileKey);
+  }
+
+  private async ensureRegisterEvent(from: string) {
+    if (this.registeredToAddress === this.options.toAddress) {
+      return; // ✅ đã đăng ký rồi → bỏ qua
+    }
+
+    // ⚠️ toAddress thay đổi hoặc chưa đăng ký
+    await this._eventLog.registerEvent(from, [this.options.toAddress]);
+
+    this.registeredToAddress = this.options.toAddress;
+  }
+}
