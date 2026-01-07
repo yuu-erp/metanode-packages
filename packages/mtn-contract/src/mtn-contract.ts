@@ -5,7 +5,7 @@ import { sendTransactionWeb } from "./services/contract-web";
 import { AbiItem, Address, CallFunctionPayload, ContractConfig } from "./types";
 import { isCoreWeb, isValidAddress, parseData } from "./utils";
 
-let hasInitializedChain = false;
+let hasInitializedChain = true;
 let chainInitPromise: Promise<void> | null = null;
 
 export class MtnContract {
@@ -17,8 +17,8 @@ export class MtnContract {
       this.#validateToAddress(config.to);
     }
     // void this.#connectChainOnInit().catch((error) => {
-    //   console.error('Initial chain connection failed:', error)
-    // })
+    //   console.error("Initial chain connection failed:", error);
+    // });
   }
 
   public getConfig() {
@@ -127,7 +127,7 @@ export class MtnContract {
           result = await sendTransactionWeb(data);
           console.log("KHAIHOAN - DEBUG - 2025 - result", result);
         } else {
-          // console.warn('window.finSdk not found, fallback to native transaction')
+          console.warn("window.finSdk not found, fallback to native transaction");
           result = await sendTransactionNative(data);
         }
         this.#lastHash = result?.data?.hash || "";
