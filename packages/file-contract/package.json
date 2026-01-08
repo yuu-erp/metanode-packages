@@ -1,6 +1,6 @@
 {
   "name": "@metanodejs/file-contract",
-  "version": "0.0.2",
+  "version": "0.0.1",
   "private": false,
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
