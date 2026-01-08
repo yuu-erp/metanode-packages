@@ -327,8 +327,8 @@ importers:
   packages/system-core:
     dependencies:
       '@metanodejs/exceptions':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: workspace:*
+        version: link:../exceptions
       '@metanodejs/system-message':
         specifier: workspace:*
         version: link:../system-message

@@ -7,14 +7,22 @@ export const Route = createFileRoute("/")({
 });
 
 const fileContract = new FileContractContainer();
+const TO_ADDRESS = "77a1f4f69976dc33d05a0b8df190dcd061ca0080";
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const [fileKey, setFileKey] = useState<string | null>(null);
+  // FileKey input (nhập tay hoặc auto fill)
+  const [fileKey, setFileKey] = useState<string>(
+    "5305cc686c907c23affd3ebad9fcd112a2305c7c91ecdcb406d7637a76638fb6",
+  );
+
   const [downloading, setDownloading] = useState(false);
+
+  // Preview ảnh download
+  const [downloadPreview, setDownloadPreview] = useState<string | null>(null);
 
   // ======================
   // HANDLE FILE CHANGE
@@ -37,21 +45,22 @@ function App() {
   useEffect(() => {
     return () => {
       if (preview) URL.revokeObjectURL(preview);
+      if (downloadPreview) URL.revokeObjectURL(downloadPreview);
     };
-  }, [preview]);
+  }, [preview, downloadPreview]);
 
   // ======================
-  // SUBMIT UPLOAD
+  // UPLOAD FILE
   // ======================
   const handleSubmit = async () => {
     if (!file || loading) return;
 
     try {
       setLoading(true);
-      setFileKey(null);
 
-      const key = await fileContract.uploadFile(file, "77a1f4f69976dc33d05a0b8df190dcd061ca0080");
+      const key = await fileContract.uploadFile(file, TO_ADDRESS);
 
+      // Auto fill vào input
       setFileKey(key);
     } catch (error) {
       console.error("Upload error:", error);
@@ -62,26 +71,42 @@ function App() {
   };
 
   // ======================
-  // DOWNLOAD
+  // DOWNLOAD FILE
   // ======================
   const handleDownload = async () => {
     if (!fileKey || downloading) return;
 
     try {
       setDownloading(true);
+      setDownloadPreview(null);
 
-      /**
-       * Khi bạn implement xong:
-       * const blob = await fileContract.downloadFile(fileKey);
-       * const url = URL.createObjectURL(blob);
-       * const a = document.createElement("a");
-       * a.href = url;
-       * a.download = "downloaded-file";
-       * a.click();
-       * URL.revokeObjectURL(url);
-       */
+      const { fileData, fileName, fileExt } = await fileContract.downloadFile(
+        fileKey,
+        TO_ADDRESS,
+        1,
+      );
 
-      alert(`Download file với fileKey:\n${fileKey}`);
+      // Detect image
+      const ext = fileExt.replace(".", "").toLowerCase();
+      const isImage = ["png", "jpg", "jpeg", "gif", "webp"].includes(ext);
+
+      const blob = new Blob([fileData], {
+        type: isImage ? `image/${ext}` : "application/octet-stream",
+      });
+
+      const url = URL.createObjectURL(blob);
+
+      if (isImage) {
+        // 👉 Render ảnh lên UI
+        setDownloadPreview(url);
+      } else {
+        // 👉 Auto download file thường
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${fileName}.${ext}`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
     } catch (error) {
       console.error("Download error:", error);
       alert("Download file thất bại");
@@ -95,8 +120,8 @@ function App() {
       <div className="w-full max-w-md rounded-2xl bg-white/5 backdrop-blur border border-white/10 shadow-xl p-6 space-y-6">
         {/* TITLE */}
         <div className="text-center space-y-2">
-          <h1 className="text-2xl font-semibold text-white">Upload your file</h1>
-          <p className="text-sm text-gray-400">Chọn file và submit để xử lý</p>
+          <h1 className="text-2xl font-semibold text-white">Upload / Download file</h1>
+          <p className="text-sm text-gray-400">Upload file hoặc nhập File Key để download</p>
         </div>
 
         {/* FILE INPUT */}
@@ -115,7 +140,7 @@ function App() {
             disabled={loading}
           />
 
-          {/* PREVIEW */}
+          {/* IMAGE PREVIEW */}
           {preview && (
             <img
               src={preview}
@@ -140,7 +165,7 @@ function App() {
           </div>
         </label>
 
-        {/* SUBMIT */}
+        {/* UPLOAD BUTTON */}
         <button
           onClick={handleSubmit}
           disabled={!file || loading}
@@ -153,25 +178,43 @@ function App() {
           {loading ? "Uploading..." : "Submit file"}
         </button>
 
-        {/* RESULT */}
-        {fileKey && (
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-            <div>
-              <p className="text-xs text-gray-400">File Key</p>
-              <p className="break-all text-sm font-mono text-cyan-400">{fileKey}</p>
-            </div>
+        {/* FILE KEY INPUT */}
+        <div className="space-y-1">
+          <label className="text-xs text-gray-400">File Key</label>
+          <input
+            type="text"
+            value={fileKey}
+            onChange={(e) => setFileKey(e.target.value)}
+            placeholder="Nhập file key"
+            className="w-full rounded-lg bg-black/40 border border-white/10
+                       px-3 py-2 text-sm text-cyan-400 font-mono
+                       placeholder:text-gray-500
+                       focus:outline-none focus:border-cyan-400/60"
+          />
+        </div>
 
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              className="w-full rounded-lg py-2 text-sm font-medium
-                         bg-white/10 text-white
-                         hover:bg-white/20
-                         disabled:opacity-40
-                         transition"
-            >
-              {downloading ? "Downloading..." : "Download file"}
-            </button>
+        {/* DOWNLOAD BUTTON */}
+        <button
+          onClick={handleDownload}
+          disabled={!fileKey || downloading}
+          className="w-full rounded-lg py-2 text-sm font-medium
+                     bg-white/10 text-white
+                     hover:bg-white/20
+                     disabled:opacity-40 disabled:cursor-not-allowed
+                     transition"
+        >
+          {downloading ? "Downloading..." : "Download file"}
+        </button>
+
+        {/* DOWNLOADED IMAGE PREVIEW */}
+        {downloadPreview && (
+          <div className="rounded-xl border border-white/10 bg-white/5 p-3 space-y-2">
+            <p className="text-xs text-gray-400">Downloaded Image</p>
+            <img
+              src={downloadPreview}
+              alt="Downloaded"
+              className="w-full rounded-lg object-contain border border-white/10"
+            />
           </div>
         )}
       </div>

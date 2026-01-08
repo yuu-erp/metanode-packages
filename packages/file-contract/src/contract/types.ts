@@ -13,3 +13,8 @@ export interface GetFileInfoInput {
   fileKey: string;
 }
 export interface GetFileInfoOutput extends FileInfo {}
+
+export interface PayForDownloadInput {
+  fileKey: string;
+  downloadTimes: number;
+}

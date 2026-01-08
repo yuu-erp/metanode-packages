@@ -2,7 +2,9 @@ import { DecodeAbi, EventLog, type EventLogData } from "@metanodejs/event-log";
 import { FileContract } from "./contract";
 import { buildMerkleTreePadded, getMerkleProofPadded, verifyMerkleProof } from "./utils/merkle";
 import { appConfig } from "./config";
-
+import { getPrivateKeyFromDb } from "@metanodejs/system-core";
+import { generateSignature } from "./utils/signature";
+import { downloadAndMergeFile } from "./utils/rust-server-client.service";
 export interface FileContainerOptions {
   toAddress?: string;
   chunkSize?: number;
@@ -18,12 +20,49 @@ const eventAbi = [
     name: "FileActivated",
     type: "event",
   },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "downloadKey",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "fileKey",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "DownloadKeyGenerated",
+    type: "event",
+  },
 ];
 
 type FileEventMap = {
   FileActivated: {
     user: string;
     fileKey: string;
+  };
+  DownloadKeyGenerated: {
+    downloadKey: string;
+    fileKey: string;
+    user: string;
+    amount: string;
   };
 };
 
@@ -61,7 +100,12 @@ export class FileContractContainer {
     /** 🔥 LISTEN GLOBAL EVENT 1 LẦN */
     this._eventLog.onEventLog((data) => {
       if (data.type === "FileActivated") {
-        this.onFileActivated(data);
+        this.onFileActivated(data as EventLogData<"FileActivated", FileEventMap["FileActivated"]>);
+      }
+      if (data.type === "DownloadKeyGenerated") {
+        this.onDownloadKeyGenerated(
+          data as EventLogData<"DownloadKeyGenerated", FileEventMap["DownloadKeyGenerated"]>,
+        );
       }
     });
   }
@@ -117,11 +161,11 @@ export class FileContractContainer {
     const eventTimeoutMs = EVENT_BASE_TIMEOUT + chunks.length * EVENT_PER_CHUNK_TIMEOUT;
     const waitForActivated = new Promise<string>((resolve, reject) => {
       const timeoutId = setTimeout(() => {
-        this.peddingRequest.delete(fileKey);
+        this.peddingRequest.delete(`${fileKey}-uploadFile`);
         reject(new Error(`Timeout waiting FileActivated for ${fileKey}`));
       }, eventTimeoutMs);
 
-      this.peddingRequest.set(fileKey, { resolve, reject, timeoutId });
+      this.peddingRequest.set(`${fileKey}-uploadFile`, { resolve, reject, timeoutId });
     });
 
     /** 🚀 UPLOAD CHUNKS */
@@ -167,18 +211,98 @@ export class FileContractContainer {
     return fileKey;
   }
 
-  async downloadFile(): Promise<void> {}
+  async downloadFile(
+    fileKey: string,
+    from: string,
+    downloadTimes: number = 1,
+  ): Promise<{
+    fileData: Uint8Array;
+    fileExt: string;
+    fileName: string;
+  }> {
+    await this.ensureRegisterEvent(from);
+
+    const fileInfo = await this._contract.getFileInfo(from, this.options.toAddress, fileKey);
+    console.log("downloadFile - fileInfo: ", fileInfo);
+    const downloadPrice = await this._contract.calculatePrice(
+      from,
+      this.options.toAddress,
+      +fileInfo.totalChunks,
+    );
+    const waitForDownloadKeyGenerated = new Promise<string>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        this.peddingRequest.delete(`${fileKey}-downloadFile`);
+        reject(new Error(`Timeout waiting FileActivated for ${fileKey}`));
+      }, 60_000);
+
+      this.peddingRequest.set(`${fileKey}-downloadFile`, { resolve, reject, timeoutId });
+    });
+    console.log("downloadFile - downloadPrice: ", downloadPrice);
+    // 3. Pay for download
+    await this._contract.payForDownload(from, this.options.toAddress, String(downloadPrice), {
+      fileKey,
+      downloadTimes,
+    });
+    console.log("Pay for download success!");
+    const downloadKey = await waitForDownloadKeyGenerated;
+    console.log("waitForDownloadKeyGenerated - data", downloadKey);
+    const privateKey = await getPrivateKeyFromDb(from);
+    console.log("privateKey", privateKey);
+    const signature = await generateSignature(downloadKey, privateKey);
+    console.log("signature", signature);
+
+    const fileData = await downloadAndMergeFile(
+      fileKey,
+      downloadKey,
+      fileInfo.totalChunks,
+      signature,
+      from,
+      this.options.toAddress,
+      (downloaded, total) => {
+        console.log("downloadAndMergeFile", { downloaded, total });
+      },
+    );
+
+    const arrayBuffer = new ArrayBuffer(fileData.length);
+    const fileDataBuffer = new Uint8Array(arrayBuffer);
+    fileDataBuffer.set(fileData);
+
+    console.log({
+      fileData: fileDataBuffer,
+      fileName: fileInfo.name,
+      fileExt: fileInfo.ext || "",
+    });
+    return {
+      fileData: fileDataBuffer,
+      fileName: fileInfo.name,
+      fileExt: fileInfo.ext || "",
+    };
+  }
 
   private onFileActivated(data: EventLogData<"FileActivated", FileEventMap["FileActivated"]>) {
     console.log("onFileActivated", data);
     const { fileKey } = data.payload;
 
-    const pending = this.peddingRequest.get(fileKey);
+    const pending = this.peddingRequest.get(`${fileKey}-uploadFile`);
     if (!pending) return;
 
     clearTimeout(pending.timeoutId);
     pending.resolve(fileKey);
-    this.peddingRequest.delete(fileKey);
+    this.peddingRequest.delete(`${fileKey}-uploadFile`);
+  }
+
+  private onDownloadKeyGenerated(
+    data: EventLogData<"DownloadKeyGenerated", FileEventMap["DownloadKeyGenerated"]>,
+  ) {
+    console.log("onDownloadKeyGenerated", data);
+    const { fileKey, downloadKey } = data.payload;
+
+    const pending = this.peddingRequest.get(`${fileKey}-downloadFile`);
+    if (!pending) return;
+
+    clearTimeout(pending.timeoutId);
+    pending.resolve(downloadKey);
+    this.peddingRequest.delete(`${fileKey}-downloadFile`);
   }
 
   private async ensureRegisterEvent(from: string) {

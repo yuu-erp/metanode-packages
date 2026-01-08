@@ -1,6 +1,6 @@
 import { MtnContract } from "@metanodejs/mtn-contract";
 import { fileAbi } from "./abi";
-import { PushFileInfoInput, UploadChunkInput } from "./types";
+import { PayForDownloadInput, PushFileInfoInput, UploadChunkInput } from "./types";
 
 export class FileContract extends MtnContract {
   constructor() {
@@ -50,7 +50,18 @@ export class FileContract extends MtnContract {
     });
   }
 
-  getFileInfo(from: string, to: string, fileKey: string) {}
+  getFileInfo(from: string, to: string, fileKey: string) {
+    return this.sendTransaction({
+      to,
+      from,
+      feeType: "read",
+      inputData: {
+        fileKey,
+      },
+      functionName: "getFileInfo",
+      abiData: fileAbi.getFileInfo,
+    });
+  }
 
   getRustServerAddresses(from: string, to: string): Promise<string[]> {
     return this.sendTransaction({
@@ -59,6 +70,23 @@ export class FileContract extends MtnContract {
       feeType: "read",
       functionName: "getRustServerAddresses",
       abiData: fileAbi.getRustServerAddresses,
+    });
+  }
+
+  payForDownload(
+    from: string,
+    to: string,
+    value: string,
+    inputData: PayForDownloadInput,
+  ): Promise<void> {
+    return this.sendTransaction({
+      to,
+      from,
+      value,
+      inputData,
+      feeType: "sc",
+      functionName: "payForDownload",
+      abiData: fileAbi.payForDownload,
     });
   }
 }

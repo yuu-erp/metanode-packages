@@ -1178,3 +1178,12 @@ export const getMediaMonths = async <T = unknown>(value: { year?: number }) =>
   (await sendCommand("getMediaMonths", value)) as T;
 export const getMediaByPage = async <T = unknown>(value: { page: number; pageSize: number }) =>
   (await sendCommand("getMediaByPage", value)) as T;
+
+export const connectQuicServer = async (ip: string, port: number, alpn: string) =>
+  await sendCommand("connectQuicServer", { ip, port, alpn });
+
+export const disconnectQuicServer = async (ip: string, port: number, alpn: string) =>
+  await sendCommand("disconnectQuicServer", { ip, port, alpn });
+
+export const sendQuicMessage = async (ip: string, port: number, alpn: string, payload: string) =>
+  await sendCommand("sendQuicMessage", { ip, port, alpn, payload });
