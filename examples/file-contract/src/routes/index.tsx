@@ -7,7 +7,7 @@ export const Route = createFileRoute("/")({
 });
 
 const fileContract = new FileContractContainer();
-const TO_ADDRESS = "77a1f4f69976dc33d05a0b8df190dcd061ca0080";
+const FROM_ADDRESS = "77a1f4f69976dc33d05a0b8df190dcd061ca0080";
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -15,9 +15,7 @@ function App() {
   const [loading, setLoading] = useState(false);
 
   // FileKey input (nhập tay hoặc auto fill)
-  const [fileKey, setFileKey] = useState<string>(
-    "5305cc686c907c23affd3ebad9fcd112a2305c7c91ecdcb406d7637a76638fb6",
-  );
+  const [fileKey, setFileKey] = useState<string>("");
 
   const [downloading, setDownloading] = useState(false);
 
@@ -58,7 +56,7 @@ function App() {
     try {
       setLoading(true);
 
-      const key = await fileContract.uploadFile(file, TO_ADDRESS);
+      const key = await fileContract.uploadFile(file, FROM_ADDRESS);
 
       // Auto fill vào input
       setFileKey(key);
@@ -82,7 +80,7 @@ function App() {
 
       const { fileData, fileName, fileExt } = await fileContract.downloadFile(
         fileKey,
-        TO_ADDRESS,
+        FROM_ADDRESS,
         1,
       );
 

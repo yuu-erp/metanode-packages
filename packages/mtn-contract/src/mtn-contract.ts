@@ -70,7 +70,7 @@ export class MtnContract {
     if (isCoreWeb()) return;
 
     const checkConnect = await getStatusConnected();
-    console.log("checkConnect----", checkConnect);
+    // console.log("checkConnect----", checkConnect);
     if (checkConnect.status) return;
 
     hasInitializedChain = false;
@@ -111,6 +111,32 @@ export class MtnContract {
 
   public async sendTransaction<T = any>(payload: CallFunctionPayload): Promise<T> {
     const data = this.#formatPayload(payload);
+    // try {
+    //   // console.debug(`KHAIHOAN - Send smc send data: ${payload.functionName}`, data);
+    //   // if (payload.functionName === 'lockBalance') {
+    //   //   const inputNative = await nativeGenerateInput(data)
+    //   //   console.debug(`KHAIHOAN - input smc: ${payload.functionName}`, inputNative)
+    //   //   await share({ type: 'text', title: `${payload.functionName} - ${inputNative}` })
+    //   // }
+    //   let result;
+    //   if (isCoreWeb()) {
+    //     result = await sendTransactionWeb(data);
+    //   } else {
+    //     result = await sendTransactionNative(data);
+    //   }
+    //   this.#lastHash = result?.data?.hash || "";
+    //   const returnValue = parseData(
+    //     result?.data?.returnValue?.[""] ??
+    //       result?.data?.returnValue ??
+    //       result?.data?.["return-value"] ??
+    //       result?.data ??
+    //       result?.returnValue,
+    //   );
+    //   return returnValue as T;
+    // } catch (error) {
+    //   console.debug(`Send smc send data - error: ${payload.functionName}`, error);
+    //   throw error;
+    // }
     return this.withChainConnection(async () => {
       try {
         console.debug(`KHAIHOAN - Send smc send data: ${payload.functionName}`, data);
