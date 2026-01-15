@@ -139,7 +139,7 @@ export class MtnContract {
     // }
     return this.withChainConnection(async () => {
       try {
-        console.debug(`KHAIHOAN - Send smc send data: ${payload.functionName}`, data);
+        // console.debug(`KHAIHOAN - Send smc send data: ${payload.functionName}`, data);
         // if (payload.functionName === 'lockBalance') {
         //   const inputNative = await nativeGenerateInput(data)
         //   console.debug(`KHAIHOAN - input smc: ${payload.functionName}`, inputNative)

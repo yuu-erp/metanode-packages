@@ -1187,3 +1187,34 @@ export const disconnectQuicServer = async (ip: string, port: number, alpn: strin
 
 export const sendQuicMessage = async (ip: string, port: number, alpn: string, payload: string) =>
   await sendCommand("sendQuicMessage", { ip, port, alpn, payload });
+
+export const getVolumeMixer = async (): Promise<
+  {
+    id: string;
+    index: number;
+    name: string;
+    volume: number;
+    isMuted: boolean;
+    iconPath: string;
+    deviceType: string;
+  }[]
+> => {
+  return await sendCommand("getVolumeMixer");
+};
+
+export const startListenVolumeChanged = async () => {
+  await sendCommand("startListenVolumeChanged");
+};
+
+export const stopListenVolumeChanged = async () => {
+  await sendCommand("stopListenVolumeChanged");
+};
+
+export const setVolume = async (volume: number): Promise<void> => {
+  await sendCommand("setVolume", { volume });
+};
+
+export const getVolume = async (): Promise<number> => {
+  const rs = await sendCommand("getVolume");
+  return rs?.volume ?? 0;
+};
