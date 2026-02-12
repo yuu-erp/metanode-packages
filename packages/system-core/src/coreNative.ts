@@ -23,6 +23,7 @@ export const sendCommand = async (command: string, value?: any): Promise<any> =>
     const res = await SystemCore.send({ command, value });
     return res?.data?.data ?? res?.data ?? res;
   } catch (error: any) {
+    console.error("thanhduy error", { error, command });
     if (!isEmpty(error?.data)) throw error.data;
     throw error;
   }
@@ -1187,3 +1188,8 @@ export const disconnectQuicServer = async (ip: string, port: number, alpn: strin
 
 export const sendQuicMessage = async (ip: string, port: number, alpn: string, payload: string) =>
   await sendCommand("sendQuicMessage", { ip, port, alpn, payload });
+
+export const decryptAESGCM = async (sharedSecret: string, encrypted: string) => {
+  console.log("thanhduy - decryptAESGCM", { sharedSecret, encrypted });
+  return await sendCommand("decryptAESGCM", { sharedSecret, encrypted });
+};
