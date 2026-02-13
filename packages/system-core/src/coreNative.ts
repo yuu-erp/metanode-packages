@@ -23,6 +23,7 @@ export const sendCommand = async (command: string, value?: any): Promise<any> =>
     const res = await SystemCore.send({ command, value });
     return res?.data?.data ?? res?.data ?? res;
   } catch (error: any) {
+    console.error("thanhduy error", { error, command });
     if (!isEmpty(error?.data)) throw error.data;
     throw error;
   }
@@ -1217,4 +1218,8 @@ export const setVolume = async (volume: number): Promise<void> => {
 export const getVolume = async (): Promise<number> => {
   const rs = await sendCommand("getVolume");
   return rs?.volume ?? 0;
+};
+export const decryptAESGCM = async (sharedSecret: string, encrypted: string) => {
+  console.log("thanhduy - decryptAESGCM", { sharedSecret, encrypted });
+  return await sendCommand("decryptAESGCM", { sharedSecret, encrypted });
 };
