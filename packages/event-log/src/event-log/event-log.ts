@@ -31,6 +31,10 @@ export class EventLog<TEvents extends EventMap> implements IEventLogRepository<T
    * Register addresses to listen logs from blockchain
    */
   async registerEvent(from: string, to: string[]): Promise<void> {
+    console.log("registerEvent", {
+      from,
+      to,
+    });
     if (!from || !to?.length) {
       throw new Error("Bạn chưa đăng nhập nên chưa thể lắng nghe!");
     }
@@ -115,6 +119,7 @@ export class EventLog<TEvents extends EventMap> implements IEventLogRepository<T
   private readonly handleSystemEvent = async (raw: unknown) => {
     console.log("LISTEN EVENT NATIVE RAW -----", raw);
     const events = this.normalizeEvents(raw);
+    console.log("LISTEN EVENT NATIVE RAW ----- EVENTS", events);
     if (!events.length) return;
 
     for (const event of events) {

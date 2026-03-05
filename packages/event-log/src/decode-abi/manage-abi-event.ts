@@ -89,6 +89,7 @@ export class ManageAbiEvent {
         allInputs: inputs,
       });
     }
+    console.log("registerAbi-0----- ", this.abiEvents);
   }
 
   /**

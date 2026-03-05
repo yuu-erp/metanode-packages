@@ -4,6 +4,7 @@ import type {
   CallFunctionPayload,
   Chain,
   Dapp,
+  GetMediaEKYCType,
   IFile,
   IInsertProfile,
   ILoadMainWithRef,
@@ -330,16 +331,6 @@ export const zipFile = async <T = string>(value: {
 }): Promise<T> => {
   const result = await sendCommand("zip-file", value);
   if (result?.path) return result.path;
-  return result;
-};
-
-export const zipFilesToFolder = async <T = string>(value: {
-  fileName: string;
-  password: string;
-  filePaths: string[];
-}): Promise<T> => {
-  const result = await sendCommand("zipFilesToFolder", value);
-  if (result?.zipFilePath) return result.zipFilePath;
   return result;
 };
 
@@ -746,13 +737,6 @@ export const handleRequestPermission = async (permission: Permission) => {
     if (!granted) throw new Error("Contact permission denied");
   }
   return true;
-};
-
-export const openEkyc = async (frontCardUrl: string) => {
-  return await sendCommand("open-ekyc", {
-    token: "token string here",
-    frontCardUrl,
-  });
 };
 
 export const openDapp = async <T = Dapp>(value: T) => await sendCommand("open-dapp", value);
@@ -1219,7 +1203,62 @@ export const getVolume = async (): Promise<number> => {
   const rs = await sendCommand("getVolume");
   return rs?.volume ?? 0;
 };
-export const decryptAESGCM = async (sharedSecret: string, encrypted: string) => {
-  console.log("thanhduy - decryptAESGCM", { sharedSecret, encrypted });
-  return await sendCommand("decryptAESGCM", { sharedSecret, encrypted });
+
+export const decryptAESGCM = async (sharedSecret: string, encrypted: string) =>
+  await sendCommand("decryptAESGCM", { sharedSecret, encrypted });
+
+export const hideWebViewExtend = async (value: any) =>
+  await sendCommand("hideWebViewExtend", value);
+
+export const ekycComplete = async (value: any) => await sendCommand("ekyc-complete", value);
+
+export const getQrFromFile = async <T = { rawValue: string }>(path: string): Promise<T> =>
+  await sendCommand("getQrFromFile", { path });
+
+export const takePictureEKYC = async <
+  T = { path: string; type: "front" | "back" | "detect" | "real-time-image" },
+>(
+  type?: "front" | "back" | "detect" | "real-time-image",
+): Promise<T> => await sendCommand("takePictureEKYC", { type });
+
+export const changeCameraEKYC = async (type: "front" | "back") =>
+  await sendCommand("changeCameraEKYC", { type });
+
+export const getMediaEKYC = async <T = { path: string }>(value: GetMediaEKYCType): Promise<T> =>
+  await sendCommand("getMediaEKYC", value);
+
+export const startVideoDetect = async () => await sendCommand("start-video-detect");
+
+export const stopVideoDetect = async () => await sendCommand("stop-video-detect");
+
+export const getChunkFromFile = async <T = any>(value: {
+  path: string;
+  chunkSize: number;
+}): Promise<T> => await sendCommand("getChunkFromFile", value);
+
+export const getHashFromFile = async <T = { hash: number[]; hashString: string }>(
+  path: string,
+): Promise<T> => await sendCommand("getHashFromFile", { path });
+
+export const showWebviewExtend = async (value: {
+  url: string;
+  urlPack: string;
+  bundleId?: string;
+  urlSuffix?: string;
+}) => await sendCommand("showWebViewExtend", value);
+
+export const openEkyc = async <
+  T = { backCardImage: string; frontCardImage: string; detectVideo: string },
+>(value: {
+  url: string;
+  address: string;
+  type: "ekyc" | "auth";
+}): Promise<T> => {
+  return await sendCommand("open-ekyc", { ...value, token: "token string here", frontCardUrl: "" });
 };
+
+export const zipFilesToFolder = async <T = { zipFilePath: string }>(value: {
+  filePaths: string[];
+  fileName: string;
+  password: string;
+}): Promise<T> => await sendCommand("zipFilesToFolder", value);
