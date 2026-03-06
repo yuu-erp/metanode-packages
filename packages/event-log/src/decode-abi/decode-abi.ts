@@ -55,7 +55,6 @@ export class DecodeAbi extends ManageAbiEvent implements IDecodeAbiRepository {
     if (!hash || typeof hash !== "string") {
       throw new Error("Invalid input: hash must be a non-empty string");
     }
-
     const abiData = this.getEventByTopic0(hash);
     if (!abiData) {
       throw new Error(`ABI event for hash ${hash} not found`);

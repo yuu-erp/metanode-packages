@@ -96,7 +96,7 @@ export class MtnContract {
     await this.#connectChainOnInit();
   }
 
-  private async withChainConnection<T>(callback: () => Promise<T>): Promise<T> {
+  private async withChainConnection<T>(callback: () => Promise<T>, data: any): Promise<T> {
     try {
       if (isCoreWeb()) {
         return await callback();
@@ -104,7 +104,7 @@ export class MtnContract {
       await this.#connectChainIfNeeded();
       return await callback();
     } catch (error) {
-      console.error("Error in withChainConnection middleware:", error);
+      console.error("Error in withChainConnection middleware:", { error, data });
       throw error;
     }
   }
@@ -164,7 +164,7 @@ export class MtnContract {
         console.debug(`Send smc send data - error: ${payload.functionName}`, error);
         throw error;
       }
-    });
+    }, data);
   }
 
   public generateInput(abi: AbiItem[], functionName: string, data: any) {

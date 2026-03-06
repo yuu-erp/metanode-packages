@@ -1,7 +1,8 @@
-import { ExecuteSmartContractRequireWeb } from '../../types'
+import { ExecuteSmartContractRequireWeb } from "../../types";
 
 export const sendTransactionWeb = async (payload: ExecuteSmartContractRequireWeb) => {
-  const response = await window.finSdk.sendTransaction(payload)
-  if (!response.success) throw response
-  return response
-}
+  const response = await window.finSdk.sendTransaction(payload);
+  console.log("thanhduy - sendTransactionWeb response", response);
+  if (!response.success) throw response;
+  return response;
+};
