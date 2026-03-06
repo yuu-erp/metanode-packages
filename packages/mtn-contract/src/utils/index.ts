@@ -3,9 +3,8 @@ export const isCoreWeb = () => {
 };
 
 export function isValidAddress(address: string): boolean {
-  return /^0x[a-fA-F0-9]{40}$/.test(address);
+  return /^(0x)?[a-fA-F0-9]{40}$/.test(address.trim());
 }
-
 export const parseData = (data: any) => {
   if (!data) return data;
 
