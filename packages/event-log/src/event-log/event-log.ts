@@ -113,9 +113,13 @@ export class EventLog<TEvents extends EventMap> implements IEventLogRepository<T
    * SystemCore raw event handler
    */
   private readonly handleSystemEvent = async (raw: unknown) => {
-    console.log("LISTEN EVENT NATIVE RAW -----", raw);
+    console.log("LISTEN EVENT NATIVE RAW ----- 1", raw);
     const events = this.normalizeEvents(raw);
+    console.log("LISTEN EVENT NATIVE RAW ----- 2", events);
+
     if (!events.length) return;
+
+    console.log("LISTEN EVENT NATIVE RAW ----- 3");
 
     for (const event of events) {
       const topic0 = event.topics?.["0"];
@@ -123,11 +127,12 @@ export class EventLog<TEvents extends EventMap> implements IEventLogRepository<T
 
       try {
         const decoded = await this.decodeAbi.decodeAbi(topic0, event.data ?? "", event.topics);
+        console.log("LISTEN EVENT NATIVE RAW ----- 4", decoded);
 
         const eventName = decoded.event as keyof TEvents & string;
 
         const payload = decoded.decodedData as TEvents[typeof eventName];
-
+        console.log("LISTEN EVENT NATIVE payload -----", payload);
         // emit global
         for (const listener of this.globalListeners) {
           listener({ type: eventName, payload });

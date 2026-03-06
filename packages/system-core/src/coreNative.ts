@@ -23,7 +23,6 @@ export const sendCommand = async (command: string, value?: any): Promise<any> =>
     const res = await SystemCore.send({ command, value });
     return res?.data?.data ?? res?.data ?? res;
   } catch (error: any) {
-    console.error("thanhduy error", { error, command });
     if (!isEmpty(error?.data)) throw error.data;
     throw error;
   }
@@ -283,8 +282,10 @@ export const startVoiceChatAI = async (language: string) =>
   await sendCommand("startVoiceChatAi", { language: language });
 
 export const stopVoiceChatAI = async () => await sendCommand("stopVoiceChatAi");
-export const getPrivateKeyFromDb = async <T = string>(address: string): Promise<T> =>
-  (await sendCommand("getPrivateKeyFromDb", { address }))?.privateKey;
+export const getPrivateKeyFromDb = async <T = string>(address: string): Promise<T> => {
+  const rs = await sendCommand("getPrivateKeyFromDb", { address });
+  return rs?.privateKey;
+};
 
 export const getSeedFromDb = async <T = string>(address: string): Promise<T[]> =>
   (await sendCommand("getSeedFromDb", { address }))?.seed;
@@ -773,8 +774,15 @@ export const openCreateVisa = async () => await sendCommand("openCreateVisa");
 export const encryptAesECDHByPassword = async (password: string, message: string) =>
   await sendCommand("encryptAesECDHByPassword", { password, message });
 
-export const decryptAesECDH = async (publicKey: string, address: string, message: string) =>
-  await sendCommand("decryptAesECDH", { publicKey, address, message });
+export const decryptAesECDH = async (publicKey: string, address: string, message: string) => {
+  console.log("thanhduy - decryptAesECDH", {
+    publicKey,
+    address,
+    message,
+  });
+
+  return await sendCommand("decryptAesECDH", { publicKey, address, message });
+};
 
 export const decryptAesECDHByPassword = async (password: string, message: string) =>
   await sendCommand("decryptAesECDHByPassword", { password, message });
@@ -1190,6 +1198,5 @@ export const sendQuicMessage = async (ip: string, port: number, alpn: string, pa
   await sendCommand("sendQuicMessage", { ip, port, alpn, payload });
 
 export const decryptAESGCM = async (sharedSecret: string, encrypted: string) => {
-  console.log("thanhduy - decryptAESGCM", { sharedSecret, encrypted });
   return await sendCommand("decryptAESGCM", { sharedSecret, encrypted });
 };
