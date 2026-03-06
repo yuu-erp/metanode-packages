@@ -1263,8 +1263,6 @@ export const openEkyc = async <
   type: "ekyc" | "auth";
 }): Promise<T> => {
   return await sendCommand("open-ekyc", { ...value, token: "token string here", frontCardUrl: "" });
-export const decryptAESGCM = async (sharedSecret: string, encrypted: string) => {
-  return await sendCommand("decryptAESGCM", { sharedSecret, encrypted });
 };
 
 export const zipFilesToFolder = async <T = { zipFilePath: string }>(value: {
