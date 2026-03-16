@@ -1,4 +1,4 @@
-import { getStatusConnected } from "@metanodejs/system-core";
+import { getStatusConnected, nativeGenerateInput, share } from "@metanodejs/system-core";
 import { connectChain } from "./connect-chain";
 import { sendTransactionNative } from "./services/contract-native";
 import { sendTransactionWeb } from "./services/contract-web";
@@ -140,11 +140,11 @@ export class MtnContract {
     return this.withChainConnection(async () => {
       try {
         console.debug(`KHAIHOAN - Send smc send data: ${payload.functionName}`, data);
-        // if (payload.functionName === "AddAndUpdateManager") {
-        //   const inputNative = await nativeGenerateInput(data);
-        //   console.debug(`KHAIHOAN - input smc: ${payload.functionName}`, inputNative);
-        //   await share({ type: "text", title: `${payload.functionName} - ${inputNative}` });
-        // }
+        if (payload.functionName === "AddAndUpdateManager") {
+          const inputNative = await nativeGenerateInput(data);
+          console.debug(`KHAIHOAN - input smc: ${payload.functionName}`, inputNative);
+          await share({ type: "text", title: `${payload.functionName} - ${inputNative}` });
+        }
         let result;
         if (isCoreWeb()) {
           result = await sendTransactionWeb(data);

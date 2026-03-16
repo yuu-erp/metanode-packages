@@ -4,10 +4,12 @@ import type {
   CallFunctionPayload,
   Chain,
   Dapp,
+  DeviceStats,
   GetMediaEKYCType,
   IFile,
   IInsertProfile,
   ILoadMainWithRef,
+  NetContractAddress,
   Permission,
   Profile,
   Seed,
@@ -463,7 +465,8 @@ export const createSign = async <T = { sign: string }>(value: {
   isHex: boolean;
 }): Promise<T> => await sendCommand("createSign", value);
 
-export const getDeviceId = async () => await sendCommand("getDeviceId");
+export const getDeviceId = async <T = { deviceId: string }>(): Promise<T> =>
+  (await sendCommand("getDeviceId")) as T;
 export const setMinerSettingNative = async (value: any) =>
   await sendCommand("setMinerSetting", value);
 
@@ -1270,3 +1273,12 @@ export const zipFilesToFolder = async <T = { zipFilePath: string }>(value: {
   fileName: string;
   password: string;
 }): Promise<T> => await sendCommand("zipFilesToFolder", value);
+
+export const getDeviceStats = async (): Promise<DeviceStats> =>
+  (await sendCommand("getDeviceStats")) as DeviceStats;
+
+export const bootWindowsDiskless = async (address: string): Promise<void> =>
+  await sendCommand("bootWindowsDiskless", { address });
+
+export const getNetContractAddresses = async (isRefresh: boolean): Promise<NetContractAddress> =>
+  await sendCommand("getNetContractAddresses", { isRefresh });

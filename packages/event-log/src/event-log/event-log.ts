@@ -75,6 +75,10 @@ export class EventLog<TEvents extends EventMap> implements IEventLogRepository<T
    * eventLog.on("Transfer", payload => {})
    */
   on<K extends keyof TEvents & string>(event: K, callback: Listener<TEvents[K]>): () => void {
+    console.log("on<K extends keyof TEvents & string>(event: K, callback: Listener<TEvents[K]>)", {
+      event,
+      callback,
+    });
     this.attachSystemCore();
 
     const set = this.listeners.get(event) ?? new Set<Listener<TEvents[K]>>();

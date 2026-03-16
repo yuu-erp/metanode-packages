@@ -270,3 +270,15 @@ export interface GetMediaEKYCType {
   mediaType: "image" | "video";
   type: "front" | "back" | "detect";
 }
+
+export interface DeviceStats {
+  mac: string;
+  ip: string;
+  cpu: string;
+  ram: string;
+}
+
+export interface NetContractAddress {
+  contract: string;
+  address: string;
+}

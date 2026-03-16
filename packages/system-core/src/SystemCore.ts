@@ -38,9 +38,10 @@ class SystemCore extends EventEmitter {
     }
     const commandID = `${payload.command}_${payload.messageId}`;
     this.#receiveData[commandID] = -1;
-    await this.#sendMessageToNative(payload);
 
+    await this.#sendMessageToNative(payload);
     const response: any = await this.#postMessageToWindow(payload, commandID);
+
     if (response.success || response?.data?.success) {
       return response;
     }
@@ -120,7 +121,6 @@ class SystemCore extends EventEmitter {
         const messageParse = JSON.parse(message);
         const dataParse = JSON.parse(messageParse.data);
         this.#finSdk.call(dataParse);
-      } else {
         this.#logger.warn("WebKit handler not found");
         throw new Error("WebKit handler not found");
       }
