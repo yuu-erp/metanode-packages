@@ -1,9 +1,9 @@
 import { getStatusConnected, nativeGenerateInput, share } from "@metanodejs/system-core";
-import { connectChain } from "./connect-chain";
 import { sendTransactionNative } from "./services/contract-native";
 import { sendTransactionWeb } from "./services/contract-web";
 import { AbiItem, Address, CallFunctionPayload, ContractConfig } from "./types";
 import { isCoreWeb, isValidAddress, parseData } from "./utils";
+import { connectChain } from "./connect-chain";
 
 let hasInitializedChain = true;
 let chainInitPromise: Promise<void> | null = null;
@@ -19,6 +19,7 @@ export class MtnContract {
     // void this.#connectChainOnInit().catch((error) => {
     //   console.error("Initial chain connection failed:", error);
     // });
+    console.log(this.#connectChainIfNeeded);
   }
 
   public getConfig() {
@@ -101,7 +102,7 @@ export class MtnContract {
       if (isCoreWeb()) {
         return await callback();
       }
-      await this.#connectChainIfNeeded();
+
       return await callback();
     } catch (error) {
       console.error("Error in withChainConnection middleware:", { error, data });
@@ -170,7 +171,7 @@ export class MtnContract {
   public generateInput(abi: AbiItem[], functionName: string, data: any) {
     const match = abi.find(({ type, name }) => type === "function" && name === functionName);
     if (!match) {
-      console.error(`Function "${functionName}" not found in ABI`);
+      // console.error(`Function "${functionName}" not found in ABI`);
       return [];
     }
 
@@ -246,7 +247,7 @@ export class MtnContract {
         abiData.filter(({ type, name }) => type === "function" && name === functionName)
       : [abiData];
     if (!finalAbiData.length) {
-      console.error(`Function "${functionName}" not found in ABI`);
+      // console.error(`Function "${functionName}" not found in ABI`);
     }
 
     const bundleId = this.#getBundleId();

@@ -89,6 +89,19 @@ export class EventLog<TEvents extends EventMap> implements IEventLogRepository<T
     };
   }
 
+  off<K extends keyof TEvents & string>(event: K, callback: Listener<TEvents[K]>): void {
+    const set = this.listeners.get(event);
+    if (!set) return;
+
+    set.delete(callback);
+
+    if (set.size === 0) {
+      this.listeners.delete(event);
+    }
+
+    this.tryDetachSystemCore();
+  }
+
   /**
    * Attach SystemCore listener once
    */

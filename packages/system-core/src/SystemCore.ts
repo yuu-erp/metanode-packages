@@ -67,7 +67,7 @@ class SystemCore extends EventEmitter {
     return null;
   }
 
-  #sendChunks(command: string, data: string, isFrame = false) {
+  #sendChunks(command: string, data: string, isFrame = false, messageId: string) {
     if (!command || typeof command !== "string") {
       throw new Error("Command must be a valid string");
     }
@@ -81,6 +81,7 @@ class SystemCore extends EventEmitter {
         index,
         totalChunks,
         command,
+        messageId,
       };
       const message = JSON.stringify(payload);
       this.#postMessage(message, isFrame);
@@ -90,14 +91,19 @@ class SystemCore extends EventEmitter {
   #sendMessageToNative(payload: PayloadDto) {
     try {
       const message = JSON.stringify(payload);
+      const messageId = payload.messageId ?? "";
+      const command = payload.command;
       if (message.length > MESSAGE_SIZE_LIMIT) {
         this.#logger.warn("Message too large, splitting into chunks", message);
-        this.#sendChunks(payload.command, message);
+        this.#sendChunks(payload.command, message, false, messageId);
       } else {
         const payload = {
           type: "normal",
           data: message,
+          command,
+          messageId,
         };
+
         const messageNormal = JSON.stringify(payload);
         this.#postMessage(messageNormal);
       }
@@ -117,9 +123,10 @@ class SystemCore extends EventEmitter {
       } else if (window.electronAPI && typeof window.electronAPI.sendMessage === "function") {
         window.electronAPI.sendMessage("native", message);
       } else if (this.#finSdk) {
-        const messageParse = JSON.parse(message);
-        const dataParse = JSON.parse(messageParse.data);
-        this.#finSdk.call(dataParse);
+        this.#finSdk.call(message);
+      } else if (window.finSdk) {
+        this.#finSdk = window.finSdk;
+        this.#finSdk.call(message);
       } else {
         this.#logger.warn("WebKit handler not found");
         throw new Error("WebKit handler not found");

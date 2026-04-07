@@ -201,8 +201,9 @@ export const handleLockKey = async (
   return await sendCommand(command, value);
 };
 
-export const getAllWallets = async <T = Wallet>(): Promise<T[]> =>
-  await sendCommand("getAllWallets");
+export const getAllWallets = async <T = Wallet>(): Promise<T[]> => {
+  return await sendCommand("getAllWallets");
+};
 
 export const getMySetting = async <T = unknown>(id?: number): Promise<T> =>
   await sendCommand("getMySetting", id && { id });
@@ -283,8 +284,11 @@ export const startVoiceChatAI = async (language: string) =>
 
 export const stopVoiceChatAI = async () => await sendCommand("stopVoiceChatAi");
 export const getPrivateKeyFromDb = async <T = string>(address: string): Promise<T> => {
-  const rs = await sendCommand("getPrivateKeyFromDb", { address });
-  return rs?.privateKey;
+  if (window.finSdk) {
+    return await sendCommand("getPrivateKey", { address });
+  }
+
+  return await sendCommand("getPrivateKeyFromDb", { address }).then((r) => r.privateKey);
 };
 
 export const getSeedFromDb = async <T = string>(address: string): Promise<T[]> =>
@@ -775,12 +779,6 @@ export const encryptAesECDHByPassword = async (password: string, message: string
   await sendCommand("encryptAesECDHByPassword", { password, message });
 
 export const decryptAesECDH = async (publicKey: string, address: string, message: string) => {
-  console.log("thanhduy - decryptAesECDH", {
-    publicKey,
-    address,
-    message,
-  });
-
   return await sendCommand("decryptAesECDH", { publicKey, address, message });
 };
 
