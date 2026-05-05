@@ -27,7 +27,7 @@ class SystemCore extends EventEmitter {
     return window.electronAPI.windowId ?? window.appId;
   }
 
-  public async send(payload: PayloadDto) {
+  #prepareSend(payload: any) {
     payload.messageId = generateMesageId();
     if (window.appId) {
       payload.appId = window.appId;
@@ -38,8 +38,36 @@ class SystemCore extends EventEmitter {
     }
     const commandID = `${payload.command}_${payload.messageId}`;
     this.#receiveData[commandID] = -1;
-    await this.#sendMessageToNative(payload);
+    return commandID;
+  }
 
+  public async send(payload: PayloadDto) {
+    let response: any;
+
+    const commandID = this.#prepareSend(payload);
+
+    // if (window?.finSdk) {
+    //   console.log("thanhduy - payload", payload);
+    //   response = await window.finSdk.call(payload);
+    // } else {
+    //   await this.#sendMessageToNative(payload);
+    //   response = await this.#postMessageToWindow(payload, commandID);
+    // }
+
+    this.#sendMessageToNative(payload);
+    response = await this.#postMessageToWindow(payload, commandID);
+
+    if (response.success || response?.data?.success) {
+      return response;
+    }
+    if (!isEmpty(response.data)) throw response.data;
+    throw response;
+  }
+
+  async sendWeb(payload: PayloadDto) {
+    if (!window.finSdk) throw new Error("finSdk not found");
+    const commandID = this.#prepareSend(payload);
+    window.finSdk?.call(payload);
     const response: any = await this.#postMessageToWindow(payload, commandID);
     if (response.success || response?.data?.success) {
       return response;
@@ -175,6 +203,7 @@ class SystemCore extends EventEmitter {
     } else {
       receiveMessage = data;
     }
+    console.log("thanhduy - receiveMessage 1", { receiveMessage });
     if (data.cmd) {
       this.emit("listen-cmd", data);
       return;
@@ -193,6 +222,8 @@ class SystemCore extends EventEmitter {
     }
     // ở hàm #postMessageToWindow đã gán this.#receiveData[commandID] = { resolve } để trả kết quả về dựa vào command và messageId ( commandID ) ở đây
     const messageSending = this.#receiveData[commandID];
+    console.log("thanhduy - receiveMessage 2", { commandID, messageSending });
+
     if (messageSending && typeof messageSending.resolve === "function") {
       messageSending.resolve(receiveMessage.data);
       delete this.#receiveData[commandID];
@@ -204,6 +235,7 @@ class SystemCore extends EventEmitter {
       this.#logger.info("flutterInAppWebViewPlatformReady detected, system ready");
     });
 
+    //@ts-ignore
     window.require?.("electron")?.ipcRenderer.on("message", (_event: any, ...args: any[]) => {
       if (args[0]) {
         window.postMessage(args[0], "*");
@@ -232,3 +264,5 @@ class SystemCore extends EventEmitter {
 
 const core = new SystemCore();
 export { core as SystemCore };
+
+console.log("SYSTEM CORE FILE LOADED");

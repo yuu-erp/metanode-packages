@@ -40,7 +40,7 @@ const createTimeout = (
   }, timeoutDuration);
 };
 
-const clearListeners = (timeout: NodeJS.Timeout, eventName: string) => {
+const clearListeners = (timeout: any, eventName: string) => {
   clearTimeout(timeout);
   SystemCore.removeAllEventListeners(eventName);
 };
@@ -158,14 +158,10 @@ export const scanQr = async <T = any>(): Promise<T> => {
   isScanning = true; // bắt đầu quét
 
   try {
-    console.log("s1");
     const status = await checkPermission("camera");
-    console.log("s2", status);
 
     if (status !== 1) {
-      console.log("s2.1", status);
       const granted = await requestPermission("camera");
-      console.log("s2.2", granted);
       if (!granted) throw new Error("Camera permission denied");
     }
 
@@ -202,6 +198,7 @@ export const handleLockKey = async (
 };
 
 export const getAllWallets = async <T = Wallet>(): Promise<T[]> => {
+  console.log("thanhduy - get all wallets");
   return await sendCommand("getAllWallets");
 };
 
@@ -698,8 +695,8 @@ export const createWalletWithoutConfirm = async () =>
 
 export const createECDHPassword = async <T = { password: string }>(
   publicKey: string,
-  privateKey: string,
-): Promise<T> => await sendCommand("createECDHPassword", { publicKey, privateKey });
+  address: string,
+): Promise<T> => await sendCommand("createECDHPassword", { publicKey, address });
 
 export const encryptAESGCM = async (sharedSecret: string, plainText: string) =>
   await sendCommand("encryptAESGCM", { sharedSecret, plainText });

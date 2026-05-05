@@ -102,7 +102,7 @@ export class MtnContract {
       if (isCoreWeb()) {
         return await callback();
       }
-
+      await this.#connectChainIfNeeded();
       return await callback();
     } catch (error) {
       console.error("Error in withChainConnection middleware:", { error, data });
